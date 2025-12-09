@@ -1,0 +1,36 @@
+# Vendor
+/vendor/
+
+# Composer
+composer.lock
+
+# Config
+/app/config.local.php
+
+# Cache a temp soubory
+/temp/cache/*
+!/temp/cache/.gitkeep
+/temp/*.html
+/temp/*.log
+
+# Log soubory
+/log/*
+!/log/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Env soubory
+.env
+.env.local
+/node_modules/
+/www/assets/*
+/app/log/*

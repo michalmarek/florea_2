@@ -1,0 +1,85 @@
+{layout '../@layout.latte'}
+{block content}
+
+
+{include layoutCategories, "categories--homepage"}
+
+
+
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+<p>HP</p><p>HP</p><p>HP</p><p>HP</p>
+
+
+
+
+
+{* Příklad použití proměnných *}
+{*
+{if isset($articles)}
+<section class="articles">
+    <h2>{if $lang === 'cs'}Články{else}Articles{/if}</h2>
+    <ul>
+        {foreach $articles as $article}
+            <li>
+                <a href="{link Blog:default, slug => $article['slug']}">
+                    {$article['title']}
+                </a>
+            </li>
+        {/foreach}
+    </ul>
+</section>
+{/if}
+*}
+
+{* Vybrané články na homepage *}
+{*
+{if isset($featuredArticles)}
+<section class="featured">
+    <h2>{if $lang === 'cs'}Vybrané články{else}Featured Articles{/if}</h2>
+    {foreach $featuredArticles as $article}
+        <article>
+            <img src="{$basePath}{$article['image']}" alt="{$article['title']}">
+            <h3>
+                <a href="{link Blog:default, slug => $article['slug']}">
+                    {$article['title']}
+                </a>
+            </h3>
+            <p>{$article['excerpt']}</p>
+            <time>{$article['date']}</time>
+        </article>
+    {/foreach}
+</section>
+{/if}
+*}
+
+{* Statistiky *}
+{*
+{if isset($stats)}
+<section class="stats">
+    <div class="stat">
+        <strong>{$stats['articles']}</strong>
+        <span>{if $lang === 'cs'}Článků{else}Articles{/if}</span>
+    </div>
+    <div class="stat">
+        <strong>{$stats['visitors']}</strong>
+        <span>{if $lang === 'cs'}Návštěvníků{else}Visitors{/if}</span>
+    </div>
+    <div class="stat">
+        <strong>{$stats['projects']}</strong>
+        <span>{if $lang === 'cs'}Projektů{else}Projects{/if}</span>
+    </div>
+    <div class="stat">
+        <strong>{$stats['years']}</strong>
+        <span>{if $lang === 'cs'}Let zkušeností{else}Years of Experience{/if}</span>
+    </div>
+</section>
+{/if}
+*}

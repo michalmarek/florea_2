@@ -1,0 +1,97 @@
+{import "layoutParts.latte"}
+<!DOCTYPE html>
+<html lang="{$lang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{include title} / {$siteName}</title>
+
+    {asset "base.css"}
+    {asset "forms.css"}
+    {asset "layout.css"}
+</head>
+<body>
+
+
+<header class="header {if isPresenter("Home")}header--homepage{/if}" style="--bgPhoto:url({asset 'historicka-dlazba.webp'});--bg:url({asset 'roh.svg'});">
+    <div class="container">
+        <a class="header__logo logo" href="{link Home:default}"><img src="{asset "logo.svg"}" alt="{_("Úvodní stránka")}"></a>
+
+        <nav class="header__navigation">
+            {include layoutNavigation, "navigation--header"}
+            {include layoutLanguage, "language--header"}
+        </nav>
+
+        <nav class="header__categories">
+            {include layoutCategories, "categories--header"}
+        </nav>
+
+        <a class="header__mobileMenu mobileMenu__button" data-bs-toggle="collapse" data-bs-target="#mobileMenuId" href="#">
+            <div class="mobileMenu__hamburger"><span></span><span></span><span></span></div>
+            <div class="mobileMenu__hamburgerText">MENU</div>
+        </a>
+    </div>
+</header>
+
+
+<main>
+    <div class="container">
+        {* Flash messages - automaticky se zobrazí po redirectu *}
+        {if count($flashes) > 0}
+        <div class="mb-4">
+            {foreach $flashes as $flash}
+            <div class="alert alert-{$flash['type']} alert-dismissible fade show" role="alert">
+                <strong>
+                    {if $flash['type'] === 'success'}✓{/if}
+                    {if $flash['type'] === 'info'}ℹ{/if}
+                    {if $flash['type'] === 'warning'}⚠{/if}
+                    {if $flash['type'] === 'error'}✗{/if}
+                </strong>
+                {$flash['message']}
+            </div>
+            {/foreach}
+        </div>
+        {/if}
+
+        {include content}
+    </div>
+</main>
+
+
+{asset "layout/footer.css"}
+<footer>
+    <div class="container">
+        <div class="footer__menu">
+            {include layoutNavigation, "navigation--footer"}
+            {include layoutLanguage, "language--footer"}
+        </div>
+        <p>&copy; {=date("Y")} {$siteName}</p>
+    </div>
+</footer>
+
+
+<div class="mobileMenu collapse" id="mobileMenuId">
+    <nav>
+        {include layoutCategories, "categories--mobile"}
+        {include layoutNavigation, "navigation--mobile"}
+        {include layoutLanguage, "language--mobile"}
+    </nav>
+</div>
+
+{asset "bootstrap-core.js"}
+<script>
+    // Init tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el);
+    });
+
+    // real vw size
+    new ResizeObserver(() => {
+        let vw = document.documentElement.clientWidth / 100;
+        document.documentElement.style.setProperty('--vw', vw + 'px');
+    }).observe(document.documentElement);
+</script>
+
+
+</body>
+</html>

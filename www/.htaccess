@@ -1,0 +1,50 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Přesměrování www na non-www (volitelné)
+# RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+# RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# Přesměrování na HTTPS (volitelné)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Zakázat přístup k .git, .env a dalším skrytým souborům
+RewriteRule ^\.(?!well-known/) - [F]
+
+# Pokud soubor nebo adresář existuje, použij ho přímo
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Všechny ostatní požadavky přesměruj na index.php
+RewriteRule ^ index.php [L]
+
+# Bezpečnost - zakázat listing adresářů
+Options -Indexes
+
+# Nastavení výchozího dokumentu
+DirectoryIndex index.php
+</IfModule>
+
+
+# Komprese (volitelné, ale doporučené)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Cache hlavičky pro statické soubory (volitelné)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# Charset
+AddDefaultCharset utf-8

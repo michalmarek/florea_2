@@ -1,0 +1,115 @@
+{define layoutNavigation, $class}
+    <ul class="navigation {$class}">
+        <li><a class="navigation__link {isActive "Order:*"}" href="{link Order:default}">{_("Jak objednat")}</a></li>
+        <li><a class="navigation__link {isActive "Faq:*"}" href="{link Faq:default}">{_("Časté dotazy")}</a></li>
+        <li><a class="navigation__link {isActive "AboutUs:*"}" href="{link AboutUs:default}">{_("O nás")}</a></li>
+        <li><a class="navigation__link {isActive "Contact:*"}" href="{link Contact:default}">{_("Kontakt")}</a></li>
+    </ul>
+{/define}
+{define layoutLanguage, $class}
+    <ul class="language {$class}">
+        <li class="language__item"><a class="language__link {if $lang === 'cs'}active{/if}" href="/">CZ</a></li>
+        <li class="language__item"><a class="language__link {if $lang === 'en'}active{/if}" href="{link Home:default, lang => 'en'}">EN</a></li>
+        <li class="language__item"><a class="language__link {if $lang === 'de'}active{/if}" href="{link Home:default, lang => 'de'}">DE</a></li>
+    </ul>
+{/define}
+{define layoutCategories, $class}
+    <ul class="categories {$class}">
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "historicka-dlazba"}"
+                    href="{link Products:detail, slug => "historicka-dlazba"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-historicka-dlazba"}
+                    {_("Historická<br>dlažba")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Dlažba")}</span>
+                    <span class="text-long">{_("Historická dlažba")}</span>
+                {else}
+                    {_("Historická dlažba")}
+                {/if}
+            </a>
+        </li>
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "obklady-tvarovky"}"
+                    href="{link Products:detail, slug => "obklady-tvarovky"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-obklady-tvarovky"}
+                    {_("Obklady<br>a tvarovky")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Obklady")}</span>
+                    <span class="text-long">{_("Obklady a tvarovky")}</span>
+                {else}
+                    {_("Obklady a tvarovky")}
+                {/if}
+            </a>
+        </li>
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "exterierova-keramika"}"
+                    href="{link Products:detail, slug => "exterierova-keramika"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-exterierova-keramika"}
+                    {_("Exteriérová<br>keramika")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Exterier")}</span>
+                    <span class="text-long">{_("Exteriérová keramika")}</span>
+                {else}
+                    {_("Exteriérová keramika")}
+                {/if}
+            </a>
+        </li>
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "technicka-keramika"}"
+                    href="{link Products:detail, slug => "technicka-keramika"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-technicka-keramika"}
+                    {_("Technická<br>keramika")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Technická")}</span>
+                    <span class="text-long">{_("Technická keramika")}</span>
+                {else}
+                    {_("Technická keramika")}
+                {/if}
+            </a>
+        </li>
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "specialni-vyroba"}"
+                    href="{link Products:detail, slug => "specialni-vyroba"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-specialni-vyroba"}
+                    {_("Speciální<br>výroba")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Speciální")}</span>
+                    <span class="text-long">{_("Speciální výroba")}</span>
+                {else}
+                    {_("Speciální výroba")}
+                {/if}
+            </a>
+        </li>
+        <li class="categories__item">
+            <a
+                    class="categories__link {isActive "Products:detail", slug => "kachle-vytapeni"}"
+                    href="{link Products:detail, slug => "kachle-vytapeni"}"
+            >
+                {if ($class == "categories--header" || $class == "categories--homepage") && isPresenter("Home")}
+                    {icon "products-kachle-vytapeni"}
+                    {_("Kachle<br>a vytápění")}
+                {elseif $class == "categories--header" && !isPresenter("Home")}
+                    <span class="text-short">{_("Kachle")}</span>
+                    <span class="text-long">{_("Kachle a vytápění")}</span>
+                {else}
+                    {_("Kachle a vytápění")}
+                {/if}
+            </a>
+        </li>
+    </ul>
+{/define}

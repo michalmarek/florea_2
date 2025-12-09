@@ -1,0 +1,25 @@
+{
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    },
+    "require": {
+        "tracy/tracy": "^2.10.0",
+        "latte/latte": "^3.0",
+        "nette/database": "^3.0 || ^3.2",
+        "nette/routing": "^3.0",
+        "nette/http": "^3.0",
+        "nette/utils": "^4.0",
+        "nette/assets": "^1.0",
+        "nette/forms": "^3.2",
+        "rosell-dk/webp-convert": "^2.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/php/",
+            "App\\Presenters\\": "app/Presenters/",
+            "App\\UI\\": "app/ui/"
+        }
+    }
+}
