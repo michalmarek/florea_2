@@ -27,6 +27,7 @@ class Config
 
     /**
      * Načtení konfigurace ze souboru
+     * Pokud je již config načtený, merguje rekurzivně s existujícím
      */
     public static function load(string $configFile): void
     {
@@ -34,7 +35,15 @@ class Config
             throw new \RuntimeException("Konfigurační soubor nebyl nalezen: {$configFile}");
         }
 
-        self::$config = require $configFile;
+        $newConfig = require $configFile;
+
+        if (self::$config === null) {
+            // První načtení - prostě přiřaď
+            self::$config = $newConfig;
+        } else {
+            // Další načtení - merguj rekurzivně
+            self::$config = array_replace_recursive(self::$config, $newConfig);
+        }
     }
 
     /**

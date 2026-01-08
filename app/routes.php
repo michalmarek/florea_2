@@ -7,6 +7,13 @@ declare(strict_types=1);
  */
 
 return [
+    // === TESTOVACÍ ROUTA - ShopInfo ===
+    [
+        'pattern' => 'shop-info',  // ← Stejné pro všechny jazyky
+        'presenter' => 'ShopInfo',
+        'action' => 'default',
+    ],
+
     // Jak objednat
     [
         'patterns' => [

@@ -37,7 +37,7 @@ return [
 
     // Databáze (Nette Database Explorer)
     'database' => [
-        'dsn' => 'mysql:host=localhost;dbname=vuk;charset=utf8mb4',
+        'dsn' => 'mysql:host=localhost;dbname=florea;charset=utf8mb4',
         'user' => 'root',
         'password' => 'root',
         'options' => [

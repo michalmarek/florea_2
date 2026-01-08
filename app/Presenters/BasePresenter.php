@@ -13,6 +13,7 @@ use Nette\Bridges\AssetsLatte\LatteExtension;
 use Nette\Forms\Form;
 use Core\Config;
 use Core\Database;
+use Core\Shop\ShopContext;
 use Core\Assets\ManifestMapper;
 
 /**
@@ -88,18 +89,24 @@ abstract class BasePresenter
     protected array $params;
     protected Router $router;
     protected IRequest $httpRequest;
+    protected ShopContext $shopContext;
     protected Engine $latte;
     protected array $templateVars = [];
     protected string $lang;
     protected Explorer $database;
     private array $components = [];
 
-    public function __construct(array $params, Router $router, IRequest $httpRequest)
-    {
+    public function __construct(
+        array $params,
+        Router $router,
+        IRequest $httpRequest,
+        ShopContext $shopContext
+    ) {
         // Uložení základních závislostí
         $this->params = $params;
         $this->router = $router;
         $this->httpRequest = $httpRequest;
+        $this->shopContext = $shopContext;
         $this->lang = $params['lang'] ?? Config::get('languages.default', 'cs');
 
         // Inicializace databáze
@@ -173,7 +180,11 @@ abstract class BasePresenter
         // Nastavení základních proměnných pro všechny template
         $this->templateVars['lang'] = $this->lang;
         $this->templateVars['basePath'] = $this->httpRequest->getUrl()->getBasePath();
-        $this->templateVars['siteName'] = Config::get('site.name');
+
+        $this->templateVars['siteName'] = $this->shopContext->getWebsiteName();
+        $this->templateVars['shopContext'] = $this->shopContext;
+        $this->templateVars['seller'] = $this->shopContext->getSeller();
+
         $this->templateVars['config'] = Config::getAll();
 
         // Načtení flash messages

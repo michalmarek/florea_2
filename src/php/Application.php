@@ -8,6 +8,7 @@ use Nette\Routing\Router;
 use Nette\Http\IRequest;
 use Nette\Http\RequestFactory;
 use Core\Routing\RouterFactory;
+use Core\Shop\ShopContext;
 use Latte\Engine;
 
 /**
@@ -39,12 +40,18 @@ class Application
     private IRequest $httpRequest;
     private array $params = [];
     private string $currentLang;
+    private ShopContext $shopContext;
 
     public function __construct()
     {
         // Vytvoření HTTP požadavku
         $requestFactory = new RequestFactory;
         $this->httpRequest = $requestFactory->fromGlobals();
+
+        // Načtení ShopContext z globální proměnné (nastavené v bootstrap)
+        $this->shopContext = $GLOBALS['shopContext'] ?? throw new \RuntimeException(
+            'ShopContext not initialized. Check bootstrap.php'
+        );
 
         // Vytvoření routeru
         $routerFactory = new RouterFactory;
@@ -121,7 +128,8 @@ class Application
         $presenterInstance = new $presenterClass(
             $this->params,
             $this->router,
-            $this->httpRequest
+            $this->httpRequest,
+            $this->shopContext
         );
 
         // Zavolá akci (např. actionDefault())
@@ -172,7 +180,8 @@ class Application
                 'code' => $code,
                 'message' => $message,
                 'lang' => $this->currentLang ?? Config::get('languages.default'),
-                'siteName' => Config::get('site.name'),
+                'siteName' => $this->shopContext->getWebsiteName(),
+                'shopContext' => $this->shopContext,
             ]);
         } else {
             echo "<h1>Error {$code}</h1>";
@@ -210,5 +219,13 @@ class Application
     public function getCurrentLang(): string
     {
         return $this->currentLang;
+    }
+
+    /**
+     * Získání aktuálního shop contextu
+     */
+    public function getShopContext(): ShopContext
+    {
+        return $this->shopContext;
     }
 }
