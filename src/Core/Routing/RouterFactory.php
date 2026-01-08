@@ -45,24 +45,26 @@ class RouterFactory
     public function __construct()
     {
         // Načtení jazyků z konfigurace
-        $this->defaultLanguage = Config::get('languages.default', 'cs');
-        $this->supportedLanguages = Config::get('languages.supported', ['en']);
+        $this->defaultLanguage = Config::get('app.languages.default', 'cs');
+        $this->supportedLanguages = Config::get('app.languages.supported', ['en']);
 
         // Načtení routes z externího souboru
         $this->loadRoutes();
     }
 
     /**
-     * Načte routes z externího souboru
+     * Načte routes z externího souboru pro aktuální shop
      */
     private function loadRoutes(): void
     {
-        $routesFile = Config::get('paths.routes');
+        $shopTextId = Config::getCurrentShopTextId();
+        $configDir = Config::get('app.paths.config');
+        $routesFile = $configDir . "/routes/{$shopTextId}.php";
 
-        if (!$routesFile || !file_exists($routesFile)) {
-            // Pokud soubor neexistuje, použij prázdné pole
-            $this->routes = [];
-            return;
+        if (!file_exists($routesFile)) {
+            throw new \RuntimeException(
+                "Routes file not found for shop '{$shopTextId}': {$routesFile}"
+            );
         }
 
         $routes = require $routesFile;

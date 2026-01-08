@@ -66,6 +66,9 @@ class Application
             // Match aktuální URL
             $this->params = $this->router->match($this->httpRequest);
 
+            \Tracy\Debugger::barDump($this->httpRequest->getUrl(), 'Request URL');
+            \Tracy\Debugger::barDump($this->params, 'Matched Params');
+
             if ($this->params === null) {
                 // Žádná route nevyhovuje → 404
                 $this->handleError(404, 'Stránka nebyla nalezena');
@@ -95,12 +98,12 @@ class Application
      */
     private function cleanupLanguage(): void
     {
-        $lang = $this->params['lang'] ?? Config::get('languages.default', 'cs');
-        $supportedLanguages = Config::get('languages.supported', ['cs']);
+        $lang = $this->params['lang'] ?? Config::get('app.languages.default', 'cs');
+        $supportedLanguages = Config::get('app.languages.supported', ['cs']);
 
         // Pokud jazyk není v seznamu podporovaných, použij výchozí
         if (!in_array($lang, $supportedLanguages, true)) {
-            $lang = Config::get('languages.default', 'cs');
+            $lang = Config::get('app.languages.default', 'cs');
         }
 
         $this->params['lang'] = $lang;
@@ -162,7 +165,7 @@ class Application
         http_response_code($code);
 
         // V development módu VŽDY hoď výjimku - Tracy ji zachytí a zobrazí
-        if (Config::get('debugger.mode') === \Tracy\Debugger::Development) {
+        if (Config::get('app.debugger.mode') === \Tracy\Debugger::Development) {
             if ($exception) {
                 throw $exception; // Tracy tohle zachytí a krásně zobrazí
             }
@@ -174,11 +177,13 @@ class Application
 
         if (file_exists($errorTemplate)) {
             $latte = new Engine;
-            $latte->setTempDirectory(Config::get('latte.tempDirectory'));
+
+            $latte->setTempDirectory(Config::get('app.latte.tempDirectory'));
+
             $latte->render($errorTemplate, [
                 'code' => $code,
                 'message' => $message,
-                'lang' => $this->currentLang ?? Config::get('languages.default'),
+                'lang' => $this->currentLang ?? Config::get('app.languages.default', 'cs'),
                 'siteName' => $this->shopContext->getWebsiteName(),
                 'shopContext' => $this->shopContext,
             ]);

@@ -22,7 +22,7 @@ class ShopRepository
         $query = "
             SELECT 
                 s.id as shop_id,
-                s.seller_id,
+                s.seller_id as shop_seller_id,
                 s.textId,
                 s.url,
                 s.locales,
@@ -85,7 +85,7 @@ class ShopRepository
         $shopData = [
             'id' => (int) $row->shop_id,
             'textId' => $row->textId,
-            'sellerId' => (int) $row->seller_id,
+            'sellerId' => (int) $row->shop_seller_id,
             'url' => $row->url,
             'locales' => $row->locales,
 

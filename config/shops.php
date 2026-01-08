@@ -1,5 +1,10 @@
 <?php declare(strict_types=1);
 
+/**
+ * Shop domain mapping
+ * Mapování domén na shop textId
+ */
+
 return [
     'domain_mapping' => [
         // Main shop - Florea
@@ -13,6 +18,7 @@ return [
         // Satellite shop - Velké Vence
         'velke-vence.cz' => 'velke-vence',
         'www.velke-vence.cz' => 'velke-vence',
+        'www.velke-vence.local' => 'velke-vence',
         'velke-vence.local' => 'velke-vence',
 
         // Satellite shop - Podlahové vázy

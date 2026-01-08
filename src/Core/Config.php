@@ -1,160 +1,228 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Core;
 
 /**
- * Config - Správa konfigurace aplikace
+ * Hierarchical Configuration Loader
  *
- * Statická třída pro práci s konfigurací. Podporuje:
- * - load(string $file) - Načtení hlavního config souboru
- * - loadLocal(string $file) - Načtení a merge lokálního config souboru (přepíše hodnoty)
- * - get(string $key, mixed $default = null) - Získání hodnoty pomocí tečkové notace (např. 'database.user')
- * - set(string $key, mixed $value) - Nastavení hodnoty v runtime
- * - has(string $key) - Kontrola existence klíče
- * - getAll() - Získání celé konfigurace jako pole
- * - reset() - Reset konfigurace (pro testování)
+ * Loads configuration files with hierarchy:
+ * 1. config/common/{name}.php
+ * 2. config/common/{name}.local.php (if exists)
+ * 3. config/shops/{shopTextId}/{name}.php (if exists)
  *
- * @example
- * Config::load(__DIR__ . '/config.php');
- * Config::loadLocal(__DIR__ . '/config.local.php');
- * $dbUser = Config::get('database.user');
- * $siteName = Config::get('site.name', 'Default Name');
+ * Usage:
+ * - Config::get('app') - for current shop
+ * - Config::getForShop('app', 'florea') - for specific shop
  */
 class Config
 {
-    private static ?array $config = null;
+    private static ?string $currentShopTextId = null;
+    private static array $cache = [];
+    private static string $configDir;
 
     /**
-     * Načtení konfigurace ze souboru
-     * Pokud je již config načtený, merguje rekurzivně s existujícím
+     * Initialize config system with current shop
      */
-    public static function load(string $configFile): void
+    public static function init(string $currentShopTextId): void
     {
-        if (!file_exists($configFile)) {
-            throw new \RuntimeException("Konfigurační soubor nebyl nalezen: {$configFile}");
-        }
-
-        $newConfig = require $configFile;
-
-        if (self::$config === null) {
-            // První načtení - prostě přiřaď
-            self::$config = $newConfig;
-        } else {
-            // Další načtení - merguj rekurzivně
-            self::$config = array_replace_recursive(self::$config, $newConfig);
-        }
+        self::$currentShopTextId = $currentShopTextId;
+        self::$configDir = dirname(__DIR__, 2) . '/config';
     }
 
     /**
-     * Načtení lokální konfigurace a merge s existující
+     * Get configuration for current shop
+     *
+     * Supports dot notation:
+     * - Config::get('app') - returns entire app config
+     * - Config::get('app.site.name') - returns nested value
+     * - Config::get('app.site.name', 'Default') - with fallback
+     *
+     * @param mixed $default Default value if key not found
+     * @throws \RuntimeException if current shop not set
      */
-    public static function loadLocal(string $localConfigFile): void
+    public static function get(string $path, mixed $default = null): mixed
     {
-        if (!file_exists($localConfigFile)) {
-            return; // Není chyba, pokud local config neexistuje
+        if (self::$currentShopTextId === null) {
+            throw new \RuntimeException('Current shop not set. Call Config::init() first.');
         }
 
-        $local = require $localConfigFile;
+        // Split path into config name and nested keys
+        // e.g. "app.site.name" -> ["app", "site.name"]
+        $parts = explode('.', $path, 2);
+        $configName = $parts[0];
+        $nestedPath = $parts[1] ?? null;
 
-        foreach ($local as $key => $value) {
-            if (is_array($value) && self::has($key)) {
-                // Rekurzivní merge pro pole
-                $existing = self::get($key);
-                self::set($key, array_replace_recursive($existing, $value));
+        // Load the config file
+        $config = self::load($configName, self::$currentShopTextId);
+
+        // If no nested path, return entire config
+        if ($nestedPath === null) {
+            return $config;
+        }
+
+        // Navigate nested path
+        return self::getNestedValue($config, $nestedPath, $default);
+    }
+
+    /**
+     * Get configuration for specific shop (for admin use)
+     *
+     * Supports dot notation:
+     * - Config::getForShop('app', 'florea') - returns entire app config
+     * - Config::getForShop('app.site.name', 'florea') - returns nested value
+     * - Config::getForShop('app.site.name', 'florea', 'Default') - with fallback
+     *
+     * @param mixed $default Default value if key not found
+     */
+    public static function getForShop(string $path, string $shopTextId, mixed $default = null): mixed
+    {
+        // Split path into config name and nested keys
+        $parts = explode('.', $path, 2);
+        $configName = $parts[0];
+        $nestedPath = $parts[1] ?? null;
+
+        // Load the config file
+        $config = self::load($configName, $shopTextId);
+
+        // If no nested path, return entire config
+        if ($nestedPath === null) {
+            return $config;
+        }
+
+        // Navigate nested path
+        return self::getNestedValue($config, $nestedPath, $default);
+    }
+
+    /**
+     * Clear cache (useful for testing)
+     */
+    public static function clearCache(): void
+    {
+        self::$cache = [];
+    }
+
+    /**
+     * Get current shop text ID
+     */
+    public static function getCurrentShopTextId(): ?string
+    {
+        return self::$currentShopTextId;
+    }
+
+    /**
+     * Internal loader with caching and hierarchy
+     */
+    private static function load(string $name, string $shopTextId): array
+    {
+        $cacheKey = "{$name}:{$shopTextId}";
+
+        // Return from cache if available
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
+        }
+
+        // 1. Load common config
+        $config = self::loadFile(self::$configDir . "/common/{$name}.php");
+
+        // 2. Merge common.local config (if exists)
+        $localConfig = self::loadFile(self::$configDir . "/common/{$name}.local.php");
+        if (!empty($localConfig)) {
+            $config = self::mergeRecursive($config, $localConfig);
+        }
+
+        // 3. Merge shop-specific config (if exists)
+        $shopConfig = self::loadFile(self::$configDir . "/shops/{$shopTextId}/{$name}.php");
+        if (!empty($shopConfig)) {
+            $config = self::mergeRecursive($config, $shopConfig);
+        }
+
+        // Cache the result
+        self::$cache[$cacheKey] = $config;
+
+        return $config;
+    }
+
+    /**
+     * Load single config file
+     * Returns empty array if file doesn't exist
+     */
+    private static function loadFile(string $path): array
+    {
+        if (!file_exists($path)) {
+            return [];
+        }
+
+        $config = require $path;
+
+        if (!is_array($config)) {
+            throw new \RuntimeException("Config file must return an array: {$path}");
+        }
+
+        return $config;
+    }
+
+    /**
+     * Recursively merge configuration arrays
+     *
+     * Rules:
+     * - Associative arrays are merged recursively
+     * - Numeric arrays are completely overridden (not merged)
+     * - Scalar values in override replace base values
+     */
+    private static function mergeRecursive(array $base, array $override): array
+    {
+        foreach ($override as $key => $value) {
+            if (is_array($value) && isset($base[$key]) && is_array($base[$key])) {
+                // Both are arrays - check if associative or numeric
+                if (self::isAssociativeArray($value) && self::isAssociativeArray($base[$key])) {
+                    // Both associative - merge recursively
+                    $base[$key] = self::mergeRecursive($base[$key], $value);
+                } else {
+                    // At least one is numeric - override completely
+                    $base[$key] = $value;
+                }
             } else {
-                self::set($key, $value);
+                // Scalar value or one side is not array - override
+                $base[$key] = $value;
             }
         }
+
+        return $base;
     }
 
     /**
-     * Získání celé konfigurace
+     * Check if array is associative (has string keys)
      */
-    public static function getAll(): array
+    private static function isAssociativeArray(array $array): bool
     {
-        self::ensureLoaded();
-        return self::$config;
+        if (empty($array)) {
+            return false;
+        }
+
+        return array_keys($array) !== range(0, count($array) - 1);
     }
 
     /**
-     * Získání hodnoty z konfigurace pomocí tečkové notace
-     * Příklad: Config::get('database.user')
+     * Get nested value from array using dot notation
+     *
+     * @param array $array Source array
+     * @param string $path Dot-separated path (e.g., "site.name")
+     * @param mixed $default Default value if path not found
+     * @return mixed
      */
-    public static function get(string $key, mixed $default = null): mixed
+    private static function getNestedValue(array $array, string $path, mixed $default = null): mixed
     {
-        self::ensureLoaded();
+        $keys = explode('.', $path);
 
-        $keys = explode('.', $key);
-        $value = self::$config;
-
-        foreach ($keys as $k) {
-            if (!isset($value[$k])) {
+        foreach ($keys as $key) {
+            if (!is_array($array) || !array_key_exists($key, $array)) {
                 return $default;
             }
-            $value = $value[$k];
+            $array = $array[$key];
         }
 
-        return $value;
-    }
-
-    /**
-     * Nastavení hodnoty do konfigurace (runtime)
-     */
-    public static function set(string $key, mixed $value): void
-    {
-        self::ensureLoaded();
-
-        $keys = explode('.', $key);
-        $config = &self::$config;
-
-        foreach ($keys as $k) {
-            if (!isset($config[$k])) {
-                $config[$k] = [];
-            }
-            $config = &$config[$k];
-        }
-
-        $config = $value;
-    }
-
-    /**
-     * Kontrola, zda existuje klíč v konfiguraci
-     */
-    public static function has(string $key): bool
-    {
-        self::ensureLoaded();
-
-        $keys = explode('.', $key);
-        $value = self::$config;
-
-        foreach ($keys as $k) {
-            if (!isset($value[$k])) {
-                return false;
-            }
-            $value = $value[$k];
-        }
-
-        return true;
-    }
-
-    /**
-     * Zajištění, že konfigurace je načtená
-     */
-    private static function ensureLoaded(): void
-    {
-        if (self::$config === null) {
-            throw new \RuntimeException(
-                "Konfigurace nebyla načtena. Zavolej Config::load() v bootstrap.php"
-            );
-        }
-    }
-
-    /**
-     * Reset konfigurace (pro testování)
-     */
-    public static function reset(): void
-    {
-        self::$config = null;
+        return $array;
     }
 }

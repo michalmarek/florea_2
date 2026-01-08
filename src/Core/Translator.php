@@ -75,7 +75,7 @@ class Translator
             return;
         }
 
-        $langFile = Config::get('paths.config') . "/config/lang/{$lang}.php";
+        $langFile = Config::get('app.paths.lang') . "/{$lang}.php";
 
         if (!file_exists($langFile)) {
             // Není chyba pokud překladový soubor neexistuje - prostě nebude přeloženo

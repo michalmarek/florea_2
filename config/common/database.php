@@ -1,5 +1,12 @@
 <?php declare(strict_types=1);
 
+/**
+ * Common database configuration
+ * Společná databázová konfigurace
+ *
+ * Pro local override použij config/common/database.local.php
+ */
+
 return [
     // Databáze (Nette Database Explorer)
     'database' => [

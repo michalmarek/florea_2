@@ -46,24 +46,27 @@ class Database
 
     /**
      * Vytvoření připojení k databázi
+     *
+     * @param array $dbConfig Database configuration array with keys: dsn, user, password, options
+     * @param array $appConfig Application configuration array with keys: paths, debugger
      */
-    public static function connect(): void
+    public static function connect(array $dbConfig, array $appConfig): void
     {
         if (self::$connection !== null) {
             return; // Již připojeno
         }
 
-        // Načtení konfigurace
-        $dsn = Config::get('database.dsn');
-        $user = Config::get('database.user');
-        $password = Config::get('database.password');
-        $options = Config::get('database.options', []);
+        // Načtení konfigurace z parametrů
+        $dsn = $dbConfig['dsn'];
+        $user = $dbConfig['user'];
+        $password = $dbConfig['password'];
+        $options = $dbConfig['options'] ?? [];
 
         // Vytvoření Connection
         self::$connection = new Connection($dsn, $user, $password, $options);
 
         // Vytvoření cache pro Database
-        $cacheStorage = new FileStorage(Config::get('paths.cache'));
+        $cacheStorage = new FileStorage($appConfig['paths']['cache']);
 
         // Vytvoření Structure (pro automatickou detekci relací)
         $structure = new Structure(self::$connection, $cacheStorage);
@@ -72,7 +75,7 @@ class Database
         $conventions = new DiscoveredConventions($structure);
 
         // Tracy panel automaticky
-        if (Config::get('debugger.mode') === Debugger::Development) {
+        if ($appConfig['debugger']['mode'] === Debugger::Development) {
             \Nette\Bridges\DatabaseTracy\ConnectionPanel::initialize(
                 self::$connection,
                 true,
@@ -95,7 +98,7 @@ class Database
     public static function getExplorer(): Explorer
     {
         if (self::$explorer === null) {
-            self::connect();
+            throw new \RuntimeException('Database not connected. Call Database::connect() first in bootstrap.');
         }
 
         return self::$explorer;
@@ -107,7 +110,7 @@ class Database
     public static function getConnection(): Connection
     {
         if (self::$connection === null) {
-            self::connect();
+            throw new \RuntimeException('Database not connected. Call Database::connect() first in bootstrap.');
         }
 
         return self::$connection;

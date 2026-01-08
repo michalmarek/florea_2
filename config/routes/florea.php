@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Routes - definice všech custom rout
+ * Routes for Florea shop
+ * Definice rout pro hlavní shop Florea
  */
 
 return [
@@ -77,41 +78,4 @@ return [
         'presenter' => 'Products',
         'action' => 'default',
     ],
-
-    // === Další příklady ===
-    // Blog - stejné URL pro všechny jazyky
-    // [
-    //     'pattern' => 'blog[/<slug>]',
-    //     'presenter' => 'Blog',
-    //     'action' => 'default',
-    // ],
-
-    // Článek s ID a slugem
-    // [
-    //     'pattern' => 'article/<id \d+>[-<slug>]',
-    //     'presenter' => 'Article',
-    //     'action' => 'detail',
-    // ],
-
-    // Galerie s kategorií
-    // [
-    //     'pattern' => 'gallery[/<category>]',
-    //     'presenter' => 'Gallery',
-    //     'action' => 'default',
-    // ],
-
-    // [
-    //     'patterns' => [
-    //         'cs' => 'sluzby[/<slug>]',
-    //         'en' => 'services[/<slug>]',
-    //     ],
-    //     'presenter' => 'Services',
-    //     'action' => 'default',
-    // ],
-
-    // [
-    //     'pattern' => 'user/<username>',
-    //     'presenter' => 'User',
-    //     'action' => 'profile',
-    // ],
 ];

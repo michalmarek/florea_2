@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Local database configuration override
+ * Zkopírujte jako database.local.php a upravte podle vašeho prostředí
+ *
+ * Tento soubor je gitignored!
+ */
+
+return [
+    'database' => [
+        'dsn' => 'mysql:host=localhost;dbname=florea_dev;charset=utf8mb4',
+        'user' => 'your_username',
+        'password' => 'your_password',
+    ],
+];

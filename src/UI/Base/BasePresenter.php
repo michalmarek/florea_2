@@ -114,11 +114,11 @@ abstract class BasePresenter
 
         // Inicializace Latte
         $this->latte = new Engine;
-        $this->latte->setTempDirectory(Config::get('latte.tempDirectory'));
-        $this->latte->setAutoRefresh(Config::get('latte.autoRefresh', true));
+        $this->latte->setTempDirectory(Config::get('app.latte.tempDirectory'));
+        $this->latte->setAutoRefresh(Config::get('app.latte.autoRefresh', true));
 
         // Připojení Tracy panelu pro Latte
-        if (Config::get('debugger.mode') === \Tracy\Debugger::Development) {
+        if (Config::get('app.debugger.mode') === \Tracy\Debugger::Development) {
             $this->latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension);
         }
 
@@ -127,8 +127,8 @@ abstract class BasePresenter
         $registry->addMapper(
             'default',
             new ManifestMapper(
-                Config::get('assets.url', '/assets'),
-                Config::get('paths.assets')
+                Config::get('app.assets.url', '/assets'),
+                Config::get('app.paths.assets')
             )
         );
 
@@ -185,7 +185,7 @@ abstract class BasePresenter
         $this->templateVars['shopContext'] = $this->shopContext;
         $this->templateVars['seller'] = $this->shopContext->getSeller();
 
-        $this->templateVars['config'] = Config::getAll();
+        $this->templateVars['config'] = Config::get('app');
 
         // Načtení flash messages
         $this->templateVars['flashes'] = $this->getFlashMessages();
