@@ -244,11 +244,11 @@ php -S localhost:8000 -t www
 ```
 
 ### 2. Přidej presenter:
+
 ```php
 // /app/ui/Services/ServicesPresenter.php
 <?php
 namespace App\UI\Services;
-use App\Presenters\BasePresenter;
 
 class ServicesPresenter extends BasePresenter {
     public function actionDefault(): void {
@@ -340,11 +340,12 @@ composer dump-autoload
 ```
 
 ### Změň namespace:
+
 ```php
 // Staré
 namespace App\Presenters;
 
 // Nové
 namespace App\UI\Home;
-use App\Presenters\BasePresenter;
+
 ```

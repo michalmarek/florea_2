@@ -1,36 +1,42 @@
-# Vendor
+# Composer
 /vendor/
 
-# Composer
-composer.lock
+# NPM
+/node_modules/
+package-lock.json
 
-# Config
-/app/config.local.php
+# Runtime / Cache
+/var/cache/*
+/var/log/*
+/var/temp/*
+!/var/cache/.gitkeep
+!/var/log/.gitkeep
+!/var/temp/.gitkeep
 
-# Cache a temp soubory
-/temp/cache/*
-!/temp/cache/.gitkeep
-/temp/*.html
-/temp/*.log
-
-# Log soubory
-/log/*
-!/log/.gitkeep
+# Local configuration
+/config/*.local.php
+/config/app.local.php
+/config/database.local.php
 
 # IDE
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-.DS_Store
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 
-# Env soubory
+# Build artifacts (pokud používáš Gulp/Webpack)
+/www/assets/build/
+/www/assets/dist/
+
+# Environment
 .env
 .env.local
-/node_modules/
-/www/assets/*
-/app/log/*
+
+# Debug files
+*.log
+error_log

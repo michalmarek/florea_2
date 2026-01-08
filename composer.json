@@ -17,9 +17,9 @@
     },
     "autoload": {
         "psr-4": {
-            "Core\\": "src/php/",
-            "App\\Presenters\\": "app/Presenters/",
-            "App\\UI\\": "app/ui/"
+            "Core\\": "src/Core/",
+            "Shop\\": "src/Shop/",
+            "UI\\": "src/UI/"
         }
     }
 }
