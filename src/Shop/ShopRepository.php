@@ -2,15 +2,11 @@
 
 namespace Shop;
 
+use Core\Database;
 use Shop\Exception\ShopNotFoundException;
-use Nette\Database\Connection;
 
 class ShopRepository
 {
-    public function __construct(
-        private Connection $db
-    ) {}
-
     /**
      * Find shop with seller by textId (eager loading via JOIN)
      *
@@ -75,7 +71,7 @@ class ShopRepository
             WHERE s.textId = ?
         ";
 
-        $row = $this->db->fetch($query, $textId);
+        $row = Database::query($query, $textId)->fetch();
 
         if (!$row) {
             throw ShopNotFoundException::forTextId($textId);

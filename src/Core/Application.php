@@ -8,6 +8,7 @@ use Nette\Http\IRequest;
 use Nette\Http\RequestFactory;
 use Nette\Routing\Router;
 use Core\Routing\RouterFactory;
+use Core\Container;
 use Shop\ShopContext;
 
 /**
@@ -35,22 +36,23 @@ use Shop\ShopContext;
 
 class Application
 {
+    private Container $container;
     private Router $router;
     private IRequest $httpRequest;
     private array $params = [];
     private string $currentLang;
     private ShopContext $shopContext;
 
-    public function __construct()
+    public function __construct(Container $container)
     {
+        $this->container = $container;
+
         // Vytvoření HTTP požadavku
         $requestFactory = new RequestFactory;
         $this->httpRequest = $requestFactory->fromGlobals();
 
         // Načtení ShopContext z globální proměnné (nastavené v bootstrap)
-        $this->shopContext = $GLOBALS['shopContext'] ?? throw new \RuntimeException(
-            'ShopContext not initialized. Check bootstrap.php'
-        );
+        $this->shopContext = $this->container->get(ShopContext::class);
 
         // Vytvoření routeru
         $routerFactory = new RouterFactory;
@@ -126,13 +128,10 @@ class Application
             return;
         }
 
-        // Vytvoří instanci presenteru
-        $presenterInstance = new $presenterClass(
-            $this->params,
-            $this->router,
-            $this->httpRequest,
-            $this->shopContext
-        );
+        // Vytvoří instanci presenteru pomocí Containeru (autowiring)
+        $presenterInstance = $this->container->get($presenterClass);
+        // Nastaví routing kontext
+        $presenterInstance->setContext($this->params, $this->router, $this->httpRequest);
 
         // Zavolá akci (např. actionDefault())
         $actionMethod = 'action' . ucfirst($action);

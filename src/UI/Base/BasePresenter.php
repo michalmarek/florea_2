@@ -86,32 +86,17 @@ use Shop\ShopContext;
 
 abstract class BasePresenter
 {
-    protected array $params;
-    protected Router $router;
-    protected IRequest $httpRequest;
-    protected ShopContext $shopContext;
+    protected ?array $params = null;
+    protected ?Router $router = null;
+    protected ?IRequest $httpRequest = null;
     protected Engine $latte;
     protected array $templateVars = [];
-    protected string $lang;
-    protected Explorer $database;
+    protected ?string $lang = null;
     private array $components = [];
 
     public function __construct(
-        array $params,
-        Router $router,
-        IRequest $httpRequest,
-        ShopContext $shopContext
+        protected ShopContext $shopContext
     ) {
-        // Uložení základních závislostí
-        $this->params = $params;
-        $this->router = $router;
-        $this->httpRequest = $httpRequest;
-        $this->shopContext = $shopContext;
-        $this->lang = $params['lang'] ?? Config::get('languages.default', 'cs');
-
-        // Inicializace databáze
-        $this->database = Database::getExplorer();
-
         // Inicializace Latte
         $this->latte = new Engine;
         $this->latte->setTempDirectory(Config::get('app.latte.tempDirectory'));
@@ -168,7 +153,22 @@ abstract class BasePresenter
         $this->latte->addFilter('link', function (string $destination, array $params = []): string {
             return $this->link($destination, $params);
         });
+    }
 
+    /**
+     * Nastavení routing kontextu
+     *
+     * Volá se z Application po vytvoření presenteru.
+     * Předává routing dependencies (params, router, httpRequest).
+     */
+    public function setContext(array $params, Router $router, IRequest $httpRequest): void
+    {
+        $this->params = $params;
+        $this->router = $router;
+        $this->httpRequest = $httpRequest;
+        $this->lang = $params['lang'] ?? Config::get('languages.default', 'cs');
+
+        // Teď až zavoláme startup
         $this->startup();
     }
 
@@ -177,6 +177,11 @@ abstract class BasePresenter
      */
     protected function startup(): void
     {
+        // Ochrana - startup se volá až po setContext()
+        if ($this->params === null || $this->router === null || $this->httpRequest === null) {
+            throw new \RuntimeException('Call setContext() before startup()');
+        }
+
         // Nastavení základních proměnných pro všechny template
         $this->templateVars['lang'] = $this->lang;
         $this->templateVars['basePath'] = $this->httpRequest->getUrl()->getBasePath();

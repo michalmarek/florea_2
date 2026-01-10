@@ -8,6 +8,7 @@ require __DIR__ . '/vendor/autoload.php';
 use Core\Application;
 use Core\Config;
 use Core\Database;
+use Core\Container;
 use Shop\ShopContext;
 use Shop\ShopDetector;
 use Shop\ShopRepository;
@@ -21,6 +22,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// DI Container
+$container = new Container();
+
 
 // Načtení shop domain mappingu (potřebujeme před detekcí shopu)
 $shopsConfig = require __DIR__ . '/config/shops.php';
@@ -29,19 +33,21 @@ $shopsConfig = require __DIR__ . '/config/shops.php';
 $dbConfig = require __DIR__ . '/config/common/database.php';
 $appConfig = require __DIR__ . '/config/common/app.php';
 
+
 // Databázové připojení
 Database::connect($dbConfig['database'], $appConfig);
-$db = Database::getConnection();
 
 
 try {
     // Detekce shopu
-    $shopRepository = new ShopRepository($db);
+    $shopRepository = new ShopRepository();
     $shopDetector = new ShopDetector($shopRepository, $shopsConfig['domain_mapping']);
     $shopContext = $shopDetector->detectFromRequest();
 
-    // Uložení do globální proměnné
-    $GLOBALS['shopContext'] = $shopContext;
+    // Registrace ShopContext do Containeru
+    $container->register(ShopContext::class, function() use ($shopContext) {
+        return $shopContext;
+    });
 
 } catch (ShopNotFoundException $e) {
     // Vlastní 404 pro neznámou doménu
@@ -70,5 +76,5 @@ if (Config::get('app')['debugger']['mode'] === Tracy\Debugger::Development) {
 
 
 // Vytvoření a spuštění aplikace
-$app = new Application;
+$app = new Application($container);
 $app->run();
