@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Core\Forms;
+namespace Core;
 
 use Nette\Forms\Controls\SubmitButton;
 use Nette\Forms\Form;

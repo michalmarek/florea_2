@@ -6,8 +6,8 @@ namespace Core;
 use Latte\Engine;
 use Nette\Http\IRequest;
 use Nette\Http\RequestFactory;
-use Nette\Routing\Router;
-use Core\Routing\RouterFactory;
+use Nette\Routing\Router as NetteRouterInterface;
+use Core\Router;
 use Core\Container;
 use Shop\ShopContext;
 
@@ -16,11 +16,17 @@ use Shop\ShopContext;
  *
  * Orchestruje celý životní cyklus HTTP požadavku:
  * 1. Vytvoří HTTP request z globálních proměnných
- * * 2. Inicializuje router s definovanými routami
- * * 3. Matchuje URL na konkrétní presenter a akci
- * * 4. Vyčistí a validuje jazykový parametr
- * * 5. Spustí presenter (action → render)
- * * 6. Ošetřuje chyby (404, 500)
+ * 2. Inicializuje router s definovanými routami
+ * 3. Matchuje URL na konkrétní presenter a akci
+ * 4. Vyčistí a validuje jazykový parametr
+ * 5. Spustí presenter (action → render)
+ * 6. Ošetřuje chyby (404, 500)
+ *
+ * DI Integration:
+ * - Application dostává Container v konstruktoru
+ * - Router se vytváří přes Container (autowiring ShopContext)
+ * - Router se cachuje jako singleton
+ * - Presentery se vytváří přes Container (autowiring dependencies)
  *
  * Použití:
  * - run() - Spustí aplikaci (volá se v bootstrap.php)
@@ -37,7 +43,7 @@ use Shop\ShopContext;
 class Application
 {
     private Container $container;
-    private Router $router;
+    private NetteRouterInterface $router;
     private IRequest $httpRequest;
     private array $params = [];
     private string $currentLang;
@@ -51,11 +57,11 @@ class Application
         $requestFactory = new RequestFactory;
         $this->httpRequest = $requestFactory->fromGlobals();
 
-        // Načtení ShopContext z globální proměnné (nastavené v bootstrap)
+        // Načtení ShopContext z DI Containeru
         $this->shopContext = $this->container->get(ShopContext::class);
 
-        // Vytvoření routeru
-        $routerFactory = new RouterFactory;
+        // Vytvoření routeru přes DI Container
+        $routerFactory = $this->container->get(Router::class);
         $this->router = $routerFactory->createRouter();
     }
 

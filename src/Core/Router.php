@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Core\Routing;
+namespace Core;
 
 use Core\Config;
+use Shop\ShopContext;
 use Nette\Routing\RouteList;
 
 /**
@@ -24,6 +25,11 @@ use Nette\Routing\RouteList;
  * - Ostatní jazyky → URL s prefixem: /en/blog, /de/blog
  * - Pattern: [<lang=en|de|sk>/] - hranaté závorky = volitelné
  *
+ * Shop-Aware:
+ * - RouterFactory dostává ShopContext přes constructor injection
+ * - Automaticky načte routy pro aktuální shop z config/routes/{shopTextId}.php
+ * - Každý shop má své vlastní routy (žádná hierarchie/mergování)
+
  * Metody:
  * - createRouter() - Vytvoří a vrátí RouteList s definovanými routami
  * - setSupportedLanguages(array) - Nastaví podporované jazyky
@@ -36,13 +42,15 @@ use Nette\Routing\RouteList;
  * $factory = new RouterFactory();
  * $router = $factory->createRouter();
  */
-class RouterFactory
+class Router
 {
     private array $supportedLanguages;
     private string $defaultLanguage;
     private array $routes = [];
 
-    public function __construct()
+    public function __construct(
+        private ShopContext $shopContext
+    )
     {
         // Načtení jazyků z konfigurace
         $this->defaultLanguage = Config::get('app.languages.default', 'cs');
@@ -57,7 +65,7 @@ class RouterFactory
      */
     private function loadRoutes(): void
     {
-        $shopTextId = Config::getCurrentShopTextId();
+        $shopTextId = $this->shopContext->getTextId();
         $configDir = Config::get('app.paths.config');
         $routesFile = $configDir . "/routes/{$shopTextId}.php";
 

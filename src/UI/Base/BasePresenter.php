@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace UI\Base;
 
+use Core\Config;
+use Core\AssetMapper;
 use Latte\Engine;
 use Nette\Assets\Registry;
 use Nette\Bridges\AssetsLatte\LatteExtension;
-use Nette\Database\Explorer;
 use Nette\Forms\Form;
 use Nette\Http\IRequest;
 use Nette\Routing\Router;
-use Core\Config;
-use Core\Database;
-use Core\Assets\ManifestMapper;
 use Shop\ShopContext;
 
 /**
@@ -111,7 +109,7 @@ abstract class BasePresenter
         $registry = new Registry;
         $registry->addMapper(
             'default',
-            new ManifestMapper(
+            new AssetMapper(
                 Config::get('app.assets.url', '/assets'),
                 Config::get('app.paths.assets')
             )

@@ -11,7 +11,7 @@ use Latte\Extension;
  *
  * Registruje custom makro {icon} do Latte šablon.
  * Umožňuje vkládat SVG ikony ze sprite souboru s automatickým
- * verzováním přes Nette\Assets a ManifestMapper.
+ * verzováním přes Nette\Assets a AssetMapper.
  *
  * Metody:
  * - getTags() - Vrací asociativní pole s definicí makra a jeho handlerem

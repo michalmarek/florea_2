@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Core\Assets;
+namespace Core;
 
 use Nette\Assets\Asset;
 use Nette\Assets\AssetNotFoundException;
@@ -10,7 +10,7 @@ use Nette\Assets\Helpers;
 use Nette\Assets\Mapper;
 
 /**
- * ManifestMapper - Čte Gulp manifest pro verzované assety
+ * AssetMapper - Čte Gulp manifest pro verzované assety
  *
  * Gulp vytvoří flat manifest.json:
  *  {
@@ -30,7 +30,7 @@ use Nette\Assets\Mapper;
  *  {asset 'app.js'} → /assets/js/app-0854702cec.js
  *  {asset 'logo.png'} → /assets/images/logo-fcb67ded6b.png
  */
-class ManifestMapper implements Mapper
+class AssetMapper implements Mapper
 {
     private ?array $manifest = null;
 

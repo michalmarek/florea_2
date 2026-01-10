@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace UI\Home;
 
-use UI\Base\BasePresenter;
 use Core\Config;
+use UI\Base\BasePresenter;
 
 class HomePresenter extends BasePresenter
 {
@@ -125,7 +125,7 @@ class HomePresenter extends BasePresenter
      */
     protected function createComponentTestForm(): \Nette\Forms\Form
     {
-        $form = \Core\Forms\FormFactory::create();
+        $form = \Core\FormFactory::create();
 
         // Jméno
         $form->addText('name', 'Vaše jméno:')

@@ -9,6 +9,7 @@ use Core\Application;
 use Core\Config;
 use Core\Database;
 use Core\Container;
+use Core\Router;
 use Shop\ShopContext;
 use Shop\ShopDetector;
 use Shop\ShopRepository;
@@ -73,7 +74,6 @@ if (Config::get('app')['debugger']['mode'] === Tracy\Debugger::Development) {
     Tracy\Debugger::barDump($shopContext, 'ShopContext');
     Tracy\Debugger::barDump(Config::get('app'), 'App Config');
 }
-
 
 // Vytvoření a spuštění aplikace
 $app = new Application($container);
