@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace UI\Home;
+namespace UI\Base\Home;
 
 use Core\Config;
 use UI\Base\BasePresenter;

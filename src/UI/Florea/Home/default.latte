@@ -1,0 +1,21 @@
+{* Florea-specific template *}
+{layout $layoutPath}
+
+
+{block content}
+    <div class="container py-5">
+        <div class="alert alert-success">
+            <strong>🌸 FLOREA OVERRIDE ACTIVE!</strong><br>
+            Používáš shop-specific presenter a template pro Florea!
+        </div>
+
+        <h1>{$title}</h1>
+        <p class="lead">{$welcomeMessage}</p>
+
+        {if isset($floreaMessage)}
+            <div class="alert alert-info">
+                <strong>Florea Message:</strong> {$floreaMessage}
+            </div>
+        {/if}
+    </div>
+{/block}

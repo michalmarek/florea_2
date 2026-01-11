@@ -118,6 +118,43 @@ class Application
     }
 
     /**
+     * Hierarchické vyhledání presenteru
+     *
+     * Zkusí najít shop-specific presenter, pokud neexistuje, použije Base.
+     *
+     * Hierarchie:
+     * 1. UI\{ShopTextId}\{Presenter}\{Presenter}Presenter
+     * 2. UI\Base\{Presenter}\{Presenter}Presenter
+     *
+     * @param string $presenter Název presenteru (např. 'Home')
+     * @return string Plně kvalifikovaný název třídy
+     * @throws \RuntimeException Pokud presenter nebyl nalezen
+     */
+    private function resolvePresenterClass(string $presenter): string
+    {
+        $shopTextId = $this->shopContext->getTextId();
+
+        // 1. Zkus shop-specific presenter
+        $shopSpecificClass = "UI\\{$shopTextId}\\{$presenter}\\{$presenter}Presenter";
+
+        if (class_exists($shopSpecificClass)) {
+            \Tracy\Debugger::barDump($shopSpecificClass, 'Using Shop-Specific Presenter');
+            return $shopSpecificClass;
+        }
+
+        // 2. Fallback na Base presenter
+        $baseClass = "UI\\Base\\{$presenter}\\{$presenter}Presenter";
+
+        if (class_exists($baseClass)) {
+            \Tracy\Debugger::barDump($baseClass, 'Using Base Presenter');
+            return $baseClass;
+        }
+
+        // 3. Presenter nebyl nalezen
+        throw new \RuntimeException("Presenter '{$presenter}' nebyl nalezen (ani shop-specific, ani base)");
+    }
+
+    /**
      * Spuštění presenteru
      */
     private function runPresenter(): void
@@ -126,11 +163,11 @@ class Application
         $presenter = ucfirst($this->params['presenter']);
         $action = $this->params['action'];
 
-        // Vytvoří název třídy
-        $presenterClass = "UI\\{$presenter}\\{$presenter}Presenter";
-
-        if (!class_exists($presenterClass)) {
-            $this->handleError(404, 'Presenter nebyl nalezen');
+        // Hierarchické vyhledání presenteru (shop-specific → base)
+        try {
+            $presenterClass = $this->resolvePresenterClass($presenter);
+        } catch (\RuntimeException $e) {
+            $this->handleError(404, 'Presenter nebyl nalezen: ' . $e->getMessage());
             return;
         }
 

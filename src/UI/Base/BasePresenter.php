@@ -193,6 +193,9 @@ abstract class BasePresenter
         // Načtení flash messages
         $this->templateVars['flashes'] = $this->getFlashMessages();
 
+        // Nastavení layoutu pro všechny template
+        $this->templateVars['layoutPath'] = $this->getLayoutPath();
+
         // Přidání reference na presenter do template (pro {link} makro)
         $this->templateVars['_presenter'] = $this;
     }
@@ -321,6 +324,82 @@ abstract class BasePresenter
     }
 
     /**
+     * Hierarchické vyhledání template souboru
+     *
+     * Hierarchie:
+     * 1. UI/{ShopTextId}/{Presenter}/{action}.latte
+     * 2. UI/Base/{Presenter}/{action}.latte
+     *
+     * @param string $presenterName Název presenteru (např. 'Home')
+     * @param string $action Název akce (např. 'default')
+     * @return string Cesta k template souboru
+     * @throws \RuntimeException Pokud template nebyl nalezen
+     */
+    private function resolveTemplate(string $presenterName, string $action): string
+    {
+        $shopTextId = $this->shopContext->getTextId();
+        $basePath = dirname(__DIR__); // src/UI/
+
+        // 1. Zkus shop-specific template
+        $shopTemplate = "{$basePath}/{$shopTextId}/{$presenterName}/{$action}.latte";
+
+        if (file_exists($shopTemplate)) {
+            \Tracy\Debugger::barDump($shopTemplate, 'Using Shop-Specific Template');
+            return $shopTemplate;
+        }
+
+        // 2. Fallback na Base template
+        $baseTemplate = "{$basePath}/Base/{$presenterName}/{$action}.latte";
+
+        if (file_exists($baseTemplate)) {
+            \Tracy\Debugger::barDump($baseTemplate, 'Using Base Template');
+            return $baseTemplate;
+        }
+
+        // 3. Template nebyl nalezen
+        throw new \RuntimeException(
+            "Template '{$presenterName}/{$action}.latte' nebyl nalezen (ani shop-specific, ani base)"
+        );
+    }
+
+    /**
+     * Hierarchické vyhledání layout souboru
+     *
+     * Hierarchie:
+     * 1. UI/{ShopTextId}/@layout.latte (shop-specific layout - povinný pro produkci)
+     * 2. UI/Base/@layout.latte (fallback pro development)
+     *
+     * @return string Cesta k layout souboru
+     * @throws \RuntimeException Pokud layout nebyl nalezen
+     */
+    protected function getLayoutPath(): string
+    {
+        $shopTextId = $this->shopContext->getTextId();
+        $basePath = dirname(__DIR__); // src/UI/
+
+        // 1. Zkus shop-specific layout (preferovaný)
+        $shopLayout = "{$basePath}/{$shopTextId}/@layout.latte";
+
+        if (file_exists($shopLayout)) {
+            \Tracy\Debugger::barDump($shopLayout, 'Using Shop-Specific Layout');
+            return $shopLayout;
+        }
+
+        // 2. Fallback na Base layout (pro development/testing)
+        $baseLayout = "{$basePath}/Base/@layout.latte";
+
+        if (file_exists($baseLayout)) {
+            \Tracy\Debugger::barDump($baseLayout, 'Using Base Layout (Fallback)');
+            return $baseLayout;
+        }
+
+        // 3. Layout nebyl nalezen
+        throw new \RuntimeException(
+            "Layout pro shop '{$shopTextId}' nebyl nalezen (ani shop-specific, ani base)"
+        );
+    }
+
+    /**
      * Vykreslení templatu
      */
     protected function render(string $template = null): void
@@ -329,7 +408,7 @@ abstract class BasePresenter
             // Automatické určení templatu z názvu presenteru a akce
             $presenterName = $this->getPresenterName();
             $action = $this->params['action'] ?? 'default';
-            $template = __DIR__ . "/../{$presenterName}/{$action}.latte";
+            $template = $this->resolveTemplate($presenterName, $action);
         }
 
         if (!file_exists($template)) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace UI\ShopInfo;
+namespace UI\Base\ShopInfo;
 
 use UI\Base\BasePresenter;
 
