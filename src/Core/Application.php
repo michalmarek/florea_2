@@ -74,9 +74,6 @@ class Application
             // Match aktuální URL
             $this->params = $this->router->match($this->httpRequest);
 
-            \Tracy\Debugger::barDump($this->httpRequest->getUrl(), 'Request URL');
-            \Tracy\Debugger::barDump($this->params, 'Matched Params');
-
             if ($this->params === null) {
                 // Žádná route nevyhovuje → 404
                 $this->handleError(404, 'Stránka nebyla nalezena');
@@ -89,6 +86,9 @@ class Application
             // Nastavení jazyka
             $this->currentLang = $this->params['lang'] ?? 'cs';
             $GLOBALS['currentLang'] = $this->currentLang;
+
+            \Tracy\Debugger::barDump($this->httpRequest->getUrl(), 'Request URL');
+            \Tracy\Debugger::barDump($this->params, 'Matched Params');
 
             // Spuštění presenteru
             $this->runPresenter();
