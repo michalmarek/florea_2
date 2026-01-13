@@ -19,6 +19,7 @@
         "psr-4": {
             "Core\\": "src/Core/",
             "Shop\\": "src/Shop/",
+            "Models\\": "src/Models/",
             "UI\\": "src/UI/"
         }
     }

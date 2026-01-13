@@ -184,8 +184,8 @@ class Application
             return;
         }
 
-        // Spuštění akce
-        $presenterInstance->$actionMethod();
+        // Spuštění akce s parametry z URL
+        $this->invokeActionMethod($presenterInstance, $actionMethod);
 
         // Zavolá render metodu (např. renderDefault())
         $renderMethod = 'render' . ucfirst($action);
@@ -197,6 +197,71 @@ class Application
                 $presenterInstance->render();
             }
         }
+    }
+
+    /**
+     * Invoke action method with parameters from URL
+     *
+     * Uses reflection to match URL parameters with method parameters.
+     *
+     * @param object $presenter Presenter instance
+     * @param string $method Action method name (e.g. 'actionDetail')
+     */
+    private function invokeActionMethod(object $presenter, string $method): void
+    {
+        $reflection = new \ReflectionMethod($presenter, $method);
+        $parameters = $reflection->getParameters();
+
+        // Pokud metoda nemá parametry, zavolej ji bez nich
+        if (empty($parameters)) {
+            $presenter->$method();
+            return;
+        }
+
+        // Sestavíme argumenty pro metodu
+        $args = [];
+
+        foreach ($parameters as $param) {
+            $paramName = $param->getName();
+
+            // Parametr existuje v URL?
+            if (isset($this->params[$paramName])) {
+                $value = $this->params[$paramName];
+
+                // Type casting podle type hintu
+                $type = $param->getType();
+
+                if ($type && !$type->isBuiltin()) {
+                    // Object type hint - necháme beze změny
+                    $args[] = $value;
+                } elseif ($type) {
+                    // Builtin type - konvertujeme
+                    $typeName = $type->getName();
+
+                    $args[] = match($typeName) {
+                        'int' => (int) $value,
+                        'float' => (float) $value,
+                        'bool' => (bool) $value,
+                        'string' => (string) $value,
+                        default => $value,
+                    };
+                } else {
+                    // Bez type hintu
+                    $args[] = $value;
+                }
+            } elseif ($param->isDefaultValueAvailable()) {
+                // Parametr není v URL, ale má default hodnotu
+                $args[] = $param->getDefaultValue();
+            } else {
+                // Parametr chybí a nemá default hodnotu
+                throw new \RuntimeException(
+                    "Required parameter '{$paramName}' not found in URL for action '{$method}'"
+                );
+            }
+        }
+
+        // Zavolej metodu s parametry
+        $reflection->invokeArgs($presenter, $args);
     }
 
     /**

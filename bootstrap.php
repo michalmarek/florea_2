@@ -50,6 +50,11 @@ try {
         return $shopContext;
     });
 
+    // Registrace ProductRepository
+    $container->register(\Models\Product\ProductRepository::class, function($c) {
+        return new \Models\Product\ProductRepository();
+    });
+
 } catch (ShopNotFoundException $e) {
     // Vlastní 404 pro neznámou doménu
     http_response_code(404);

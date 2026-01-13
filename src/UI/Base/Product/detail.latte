@@ -1,0 +1,79 @@
+{layout $layoutPath}
+
+{block content}
+
+    <div class="container my-5">
+
+        {* Breadcrumbs *}
+    <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{link Home:default}">Domů</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{$product->name}</li>
+                </ol>
+    </nav>
+
+    {* Product Info *}
+    <div class="row">
+                <div class="col-md-8">
+                    <h1>{$product->name}</h1>
+
+
+            {* Stock status *}
+            <div class="mb-3">
+                            {if $product->isInStock()}
+                                <span class="badge bg-success">Skladem: {$product->stock} ks</span>
+                            {else}
+                                <span class="badge bg-danger">Není skladem</span>
+                            {/if}
+
+                {if !$product->visible}
+                                <span class="badge bg-warning">Skrytý produkt</span>
+                            {/if}
+            </div>
+
+            {* Price *}
+            <div class="mb-4">
+                            <h2 class="text-primary">{$product->getFormattedPrice()}</h2>
+            </div>
+
+            {* Buy button *}
+            {if $product->isAvailable()}
+                        <button class="btn btn-primary btn-lg">
+                            Přidat do košíku
+                        </button>
+                    {else}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            Není k dispozici
+                        </button>
+                    {/if}
+                </div>
+
+                <div class="col-md-4">
+                    {* Placeholder pro obrázek *}
+                    <div class="bg-light p-5 text-center">
+                        <p class="text-muted">Obrázek produktu</p>
+                    </div>
+                </div>
+    </div>
+
+    {* Debug info (pouze v development) *}
+    {if $config['debugger']['mode'] === 'development'}
+            <hr class="my-5">
+            <details>
+                <summary>Debug Info</summary>
+                <pre>
+Product ID: {$product->id}
+                        Shop ID: {$product->shopId}
+                        Seller ID: {$product->sellerId}
+                        Category ID: {$product->categoryId}
+                        Stock: {$product->stock}
+                        Price: {$product->getPrice()}
+                        Visible: {$product->visible ? 'Ano' : 'Ne'}
+                        Available: {$product->isAvailable() ? 'Ano' : 'Ne'}
+            </pre>
+            </details>
+        {/if}
+
+    </div>
+
+{/block}

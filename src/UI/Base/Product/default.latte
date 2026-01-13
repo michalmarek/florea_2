@@ -1,0 +1,85 @@
+{layout $layoutPath}
+
+{* Product Listing Template *}
+
+{block content}
+
+    <div class="container my-5">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Produkty</h1>
+            <span class="badge bg-secondary">Celkem: {$totalCount}</span>
+        </div>
+
+        {if empty($products)}
+            <div class="alert alert-info">
+                Žádné produkty k zobrazení.
+            </div>
+        {else}
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+                {foreach $products as $product}
+                    <div class="col">
+                        <div class="card h-100">
+
+                            {* Placeholder obrázek *}
+                            <div class="bg-light text-center p-4" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                <span class="text-muted">Obrázek</span>
+                            </div>
+
+                            <div class="card-body">
+                                {* Název produktu *}
+                            <h5 class="card-title">
+                                        <a href="{link Product:detail, id => $product->id}" class="text-decoration-none text-dark">
+                                            {$product->name}
+                                        </a>
+                            </h5>
+
+                            {* Cena *}
+                            <p class="card-text">
+                                        <strong class="text-primary fs-5">
+                                            {$product->getFormattedPrice()}
+                                        </strong>
+                            </p>
+
+                            {* Sklad status *}
+                                <div class="mb-2">
+                                    {if $product->isInStock()}
+                                        <span class="badge bg-success">Skladem: {$product->stock}</span>
+                                    {else}
+                                        <span class="badge bg-danger">Není skladem</span>
+                                    {/if}
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-transparent border-top-0">
+                                {if $product->isAvailable()}
+                                    <a href="{link Product:detail, id => $product->id}" class="btn btn-primary w-100">
+                                        Detail produktu
+                                    </a>
+                                {else}
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        Nedostupné
+                                    </button>
+                                {/if}
+                            </div>
+
+                        </div>
+                    </div>
+                {/foreach}
+            </div>
+
+            <hr>
+
+            {* Pagination component *}
+            {include ../components/pagination.latte,
+                pagination: $pagination,
+                destination: 'Product:default'
+            }
+
+            <hr>
+
+        {/if}
+
+    </div>
+
+{/block}

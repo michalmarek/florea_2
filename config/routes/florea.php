@@ -14,6 +14,16 @@ return [
         'presenter' => 'ShopInfo',
         'action' => 'default',
     ],
+    [
+        'pattern' => 'produkty',  // ← Stejné pro všechny jazyky
+        'presenter' => 'Product',
+        'action' => 'default',
+    ],
+    [
+        'pattern' => 'produkt/<id>',  // ← Stejné pro všechny jazyky
+        'presenter' => 'Product',
+        'action' => 'detail',
+    ],
 
     // Jak objednat
     [
