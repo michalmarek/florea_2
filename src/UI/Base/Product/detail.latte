@@ -2,78 +2,148 @@
 
 {block content}
 
-    <div class="container my-5">
+    {* Breadcrumbs - TODO: přidat kategorie produktu *}
+    {var $breadcrumbItems = [
+    ['text' => 'Produkty', 'link' => 'Product:default', 'params' => []],
+    ['text' => $product->name, 'link' => null]
+    ]}
+    {include '../components/breadcrumbs.latte', items => $breadcrumbItems}
 
-        {* Breadcrumbs *}
-    <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{link Home:default}">Domů</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{$product->name}</li>
-                </ol>
-    </nav>
-
-    {* Product Info *}
     <div class="row">
-                <div class="col-md-8">
-                    <h1>{$product->name}</h1>
-
-
-            {* Stock status *}
-            <div class="mb-3">
-                            {if $product->isInStock()}
-                                <span class="badge bg-success">Skladem: {$product->stock} ks</span>
-                            {else}
-                                <span class="badge bg-danger">Není skladem</span>
-                            {/if}
-
-                {if !$product->visible}
-                                <span class="badge bg-warning">Skrytý produkt</span>
-                            {/if}
-            </div>
-
-            {* Price *}
-            <div class="mb-4">
-                            <h2 class="text-primary">{$product->getFormattedPrice()}</h2>
-            </div>
-
-            {* Buy button *}
-            {if $product->isAvailable()}
-                        <button class="btn btn-primary btn-lg">
-                            Přidat do košíku
-                        </button>
-                    {else}
-                        <button class="btn btn-secondary btn-lg" disabled>
-                            Není k dispozici
-                        </button>
-                    {/if}
-                </div>
-
-                <div class="col-md-4">
-                    {* Placeholder pro obrázek *}
-                    <div class="bg-light p-5 text-center">
-                        <p class="text-muted">Obrázek produktu</p>
+        {* Levý sloupec - obrázek *}
+        <div class="col-md-6 mb-4">
+            {if !empty($product->image)}
+                <img src="{$product->image}" alt="{$product->name}" class="img-fluid rounded shadow-sm">
+            {else}
+                <div class="bg-light rounded shadow-sm d-flex align-items-center justify-content-center" style="aspect-ratio: 1/1;">
+                    <div class="text-center text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                            <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                        </svg>
+                        <p class="mt-2">Bez obrázku</p>
                     </div>
                 </div>
+            {/if}
+        </div>
+
+        {* Pravý sloupec - informace *}
+        <div class="col-md-6">
+            <h1 class="mb-3">{$product->name}</h1>
+
+            {* Kód produktu *}
+            {if !empty($product->code)}
+                <p class="text-muted mb-3">
+                    <small>Kód produktu: <strong>{$product->code}</strong></small>
+                </p>
+            {/if}
+
+            {* Cena *}
+            <div class="mb-4">
+                {if $product->priceWithVat > 0}
+                    <div class="h2 text-primary mb-1">
+                        {$product->priceWithVat|number:2} Kč
+                        <small class="text-muted fs-6">s DPH</small>
+                    </div>
+                    {if $product->priceWithoutVat > 0}
+                        <p class="text-muted mb-0">
+                            <small>{$product->priceWithoutVat|number:2} Kč bez DPH</small>
+                        </p>
+                    {/if}
+                {else}
+                    <div class="h4 text-muted">
+                        Cena na dotaz
+                    </div>
+                {/if}
+            </div>
+
+            {* Dostupnost *}
+            <div class="mb-4">
+                {if $product->isInStock()}
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                    <i class="bi bi-check-circle"></i> Skladem
+                </span>
+                {else}
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                    <i class="bi bi-clock"></i> Na objednávku
+                </span>
+                {/if}
+            </div>
+
+            {* Krátký popis *}
+            {if !empty($product->description)}
+                <div class="mb-4">
+                    <h3 class="h5">Popis</h3>
+                    <p class="text-muted">{$product->description}</p>
+                </div>
+            {/if}
+
+            {* Tlačítka - placeholder pro budoucí košík *}
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-primary btn-lg" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    Přidat do košíku (brzy)
+                </button>
+                <a href="{link Product:default}" class="btn btn-outline-secondary">
+                    ← Zpět na produkty
+                </a>
+            </div>
+        </div>
     </div>
 
-    {* Debug info (pouze v development) *}
-    {if $config['debugger']['mode'] === 'development'}
-            <hr class="my-5">
-            <details>
-                <summary>Debug Info</summary>
-                <pre>
-Product ID: {$product->id}
-                        Shop ID: {$product->shopId}
-                        Seller ID: {$product->sellerId}
-                        Category ID: {$product->categoryId}
-                        Stock: {$product->stock}
-                        Price: {$product->getPrice()}
-                        Visible: {$product->visible ? 'Ano' : 'Ne'}
-                        Available: {$product->isAvailable() ? 'Ano' : 'Ne'}
-            </pre>
-            </details>
-        {/if}
+    {* Detailní popis - pokud existuje *}
+    {if !empty($product->detailedDescription)}
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="h4 mb-3">Detailní informace</h2>
+                <div class="card">
+                    <div class="card-body">
+                        {$product->detailedDescription|noescape}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
 
+    {* Technické parametry - placeholder pro budoucnost *}
+    <div class="row mt-4">
+        <div class="col-12">
+            <h2 class="h4 mb-3">Technické informace</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                        {if !empty($product->code)}
+                            <tr>
+                                <th class="w-25">Kód produktu</th>
+                                <td>{$product->code}</td>
+                            </tr>
+                        {/if}
+                        <tr>
+                                <th>Dostupnost</th>
+                                <td>
+                                    {if $product->isInStock()}
+                                        <span class="text-success">Skladem</span>
+                                    {else}
+                                        <span class="text-warning">Na objednávku</span>
+                                    {/if}
+                                </td>
+                        </tr>
+                        {if $product->priceWithoutVat > 0}
+                            <tr>
+                                <th>Cena bez DPH</th>
+                                <td>{$product->priceWithoutVat|number:2} Kč</td>
+                            </tr>
+                            <tr>
+                                <th>Cena s DPH</th>
+                                <td><strong>{$product->priceWithVat|number:2} Kč</strong></td>
+                            </tr>
+                        {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-
-{/block}

@@ -1,80 +1,90 @@
-{**
- * Reusable Pagination Component
+{*
+ * Pagination komponenta - Bootstrap 5 style
  *
- * Parameters:
- * @param array $pagination Pagination data
- *   - int page      Current page number (1-indexed)
- *   - int lastPage  Total number of pages
- * @param string $destination Link destination (e.g. 'Product:default')
- * @param array $params Additional URL parameters (optional)
- *
- * Usage:
- * {include components/pagination.latte,
- *     pagination: $pagination,
- *     destination: 'Product:default'
- * }
+ * Parametry:
+ * - page: int - aktuální stránka
+ * - lastPage: int - poslední stránka
+ * - destination: string - cíl pro link (např. 'Product:default', 'this')
+ * - params: array - parametry pro link (např. ['slug' => 'kategorie'])
+ * - showFirst: bool (optional) - zobrazit odkaz na první stránku (default: true)
+ * - showLast: bool (optional) - zobrazit odkaz na poslední stránku (default: true)
+ * - range: int (optional) - kolik stránek zobrazit okolo aktuální (default: 2)
  *}
 
-{if $pagination['lastPage'] > 1}
+{if $lastPage > 1}
+    {var $showFirst = $showFirst ?? true}
+    {var $showLast = $showLast ?? true}
+    {var $range = $range ?? 2}
 
-    {* Ensure $params is always an array *}
-    {var $params = $params ?? []}
+    <nav aria-label="Navigace stránkování">
+        <ul class="pagination justify-content-center">
 
-    <nav aria-label="Stránkování" class="mt-5">
-        <ul class="d-flex" style="gap:10px;">
-
-            {* Previous button *}
-            <li class="page-item {if $pagination['page'] <= 1}disabled{/if}">
-                    {var $prevPage = max(1, $pagination['page'] - 1)}
-                    <a class="page-link"
-                       href="{link $destination, (expand) $params, p => $prevPage}"
-                       aria-label="Předchozí strana">
+            {* Previous *}
+            {if $page > 1}
+                <li class="page-item">
+                    <a class="page-link" href="{link $destination, (expand) $params, p => $page - 1}" aria-label="Předchozí">
                         <span aria-hidden="true">&laquo;</span>
-                        <span class="d-none d-sm-inline"> Předchozí</span>
                     </a>
-            </li>
+                </li>
+            {else}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-label="Předchozí">
+                        <span aria-hidden="true">&laquo;</span>
+                    </span>
+                </li>
+            {/if}
 
-            {* Page numbers *}
-            {for $i = 1; $i <= $pagination['lastPage']; $i++}
-
-                {* Smart pagination: show first 2, last 2, and around current *}
-                {var $showPage = (
-                $i <= 2 ||
-                $i > $pagination['lastPage'] - 2 ||
-                abs($i - $pagination['page']) <= 2
-                )}
-
-                {var $showDots = (
-                $i === 3 && $pagination['page'] > 5 ||
-                $i === $pagination['lastPage'] - 2 && $pagination['page'] < $pagination['lastPage'] - 4
-                )}
-
-                {if $showPage}
-                    <li class="page-item {if $i === $pagination['page']}active{/if}">
-                        <a class="page-link"
-                           href="{link $destination, (expand) $params, p => $i}"
-                           {if $i === $pagination['page']}aria-current="page" style="font-weight:bold;border:1px solid #000;" {/if}>
-                                {$i}
-                        </a>
-                    </li>
-                {elseif $showDots}
-                    <li class="page-item disabled d-none d-sm-block">
+            {* First page *}
+            {if $showFirst && $page > $range + 2}
+                <li class="page-item">
+                    <a class="page-link" href="{link $destination, (expand) $params, p => 1}">1</a>
+                </li>
+                {if $page > $range + 3}
+                    <li class="page-item disabled">
                         <span class="page-link">...</span>
                     </li>
                 {/if}
+            {/if}
 
+            {* Pages around current *}
+            {for $i = max(1, $page - $range); $i <= min($lastPage, $page + $range); $i++}
+                {if $i == $page}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{$i}</span>
+                    </li>
+                {else}
+                    <li class="page-item">
+                        <a class="page-link" href="{link $destination, (expand) $params, p => $i}">{$i}</a>
+                    </li>
+                {/if}
             {/for}
 
-            {* Next button *}
-            <li class="page-item {if $pagination['page'] >= $pagination['lastPage']}disabled{/if}">
-                {var $nextPage = min($pagination['lastPage'], $pagination['page'] + 1)}
-                <a class="page-link"
-                   href="{link $destination, (expand) $params, p => $nextPage}"
-                   aria-label="Další strana">
-                    <span class="d-none d-sm-inline">Další </span>
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
+            {* Last page *}
+            {if $showLast && $page < $lastPage - $range - 1}
+                {if $page < $lastPage - $range - 2}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {/if}
+                <li class="page-item">
+                    <a class="page-link" href="{link $destination, (expand) $params, p => $lastPage}">{$lastPage}</a>
+                </li>
+            {/if}
+
+            {* Next *}
+            {if $page < $lastPage}
+                <li class="page-item">
+                    <a class="page-link" href="{link $destination, (expand) $params, p => $page + 1}" aria-label="Následující">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {else}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-label="Následující">
+                        <span aria-hidden="true">&raquo;</span>
+                    </span>
+                </li>
+            {/if}
 
         </ul>
     </nav>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UI\Base;
 
 use Core\Config;
+use Core\Container;
 use Core\AssetMapper;
 use Latte\Engine;
 use Nette\Assets\Registry;
@@ -91,6 +92,7 @@ abstract class BasePresenter
     protected array $templateVars = [];
     protected ?string $lang = null;
     private array $components = [];
+    private ?LayoutDataProvider $layoutDataProvider = null;
 
     public function __construct(
         protected ShopContext $shopContext
@@ -171,6 +173,28 @@ abstract class BasePresenter
     }
 
     /**
+     * Get layout data provider (lazy initialized)
+     *
+     * Autowired through DI container.
+     * Shop-specific presenters can override for custom implementation.
+     *
+     * @return LayoutDataProvider Layout data provider instance
+     */
+    protected function getLayoutDataProvider(): LayoutDataProvider
+    {
+        if ($this->layoutDataProvider === null) {
+            // LayoutDataProvider will be autowired with all dependencies
+            // No need to pass ShopContext manually - Container handles it
+            $this->layoutDataProvider = new LayoutDataProvider(
+                $this->shopContext,
+                new \Models\Category\MenuCategoryRepository()
+            );
+        }
+
+        return $this->layoutDataProvider;
+    }
+
+    /**
      * Startup metoda - volá se před akcí
      */
     protected function startup(): void
@@ -195,6 +219,9 @@ abstract class BasePresenter
 
         // Nastavení layoutu pro všechny template
         $this->templateVars['layoutPath'] = $this->getLayoutPath();
+
+        // Layout data provider for menu, user info, etc.
+        $this->templateVars['layoutData'] = $this->getLayoutDataProvider();
 
         // Přidání reference na presenter do template (pro {link} makro)
         $this->templateVars['_presenter'] = $this;

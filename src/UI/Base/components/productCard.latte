@@ -1,0 +1,47 @@
+{*
+ * Product Card komponenta - univerzální karta produktu
+ *
+ * Parametry:
+ * - product: Product - product entita
+ * - showDescription: bool (optional) - zobrazit popis? (default: false)
+ *}
+
+<div class="card h-100">
+    {* Obrázek produktu - placeholder prozatím *}
+    {if !empty($product->image)}
+        <img src="{$product->image}" class="card-img-top" alt="{$product->name}">
+    {else}
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+            <span class="text-muted">Bez obrázku</span>
+        </div>
+    {/if}
+
+    <div class="card-body d-flex flex-column">
+        <h5 class="card-title">
+            <a href="{link Product:detail, id => $product->id}" class="text-decoration-none text-dark">
+                {$product->name}
+            </a>
+        </h5>
+
+        {if ($showDescription ?? false) && !empty($product->description)}
+            <p class="card-text text-muted small flex-grow-1">
+                {$product->description|truncate:100}
+            </p>
+        {/if}
+
+        {* Cena *}
+        <div class="mt-auto">
+            <p class="h5 mb-3">
+                {if $product->priceWithVat > 0}
+                    {$product->priceWithVat|number:2} Kč
+                {else}
+                    <span class="text-muted">Cena na dotaz</span>
+                {/if}
+            </p>
+
+            <a href="{link Product:detail, id => $product->id}" class="btn btn-primary w-100">
+                Detail produktu
+            </a>
+        </div>
+    </div>
+</div>

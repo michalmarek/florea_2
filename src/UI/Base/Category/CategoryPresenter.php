@@ -36,6 +36,10 @@ class CategoryPresenter extends BasePresenter
             exit;
         }
 
+        // Get direct child categories (subcategories)
+        $childrenSelection = $this->menuCategoryRepository->getChildrenSelection($category->id);
+        $childCategories = $this->menuCategoryRepository->mapRowsToEntities($childrenSelection);
+
         // Get all descendant menu category IDs
         $menuCategoryIds = $this->menuCategoryRepository->getAllDescendantIds($category->id);
 
@@ -57,6 +61,7 @@ class CategoryPresenter extends BasePresenter
 
         // Assign to template
         $this->assign('category', $category);
+        $this->assign('childCategories', $childCategories);
         $this->assign('products', $products);
         $this->assign('breadcrumbs', $breadcrumbs);
         $this->assign('pagination', [
@@ -87,7 +92,11 @@ class CategoryPresenter extends BasePresenter
         // Walk up the tree
         while ($current !== null) {
             // Add current category to beginning of array
-            array_unshift($breadcrumbs, $current);
+            array_unshift($breadcrumbs, [
+                'text' => $current->name,
+                'link' => 'Category:default',
+                'params' => ['slug' => $current->url]
+            ]);
 
             // Move to parent
             if ($current->parentId !== null) {

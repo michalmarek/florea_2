@@ -67,6 +67,11 @@ class Container
      */
     public function get(string $id): object
     {
+        // Special case: Container requesting itself
+        if ($id === Container::class || $id === 'Core\\Container') {
+            return $this;
+        }
+
         // Return cached instance if available
         if (isset($this->instances[$id])) {
             return $this->instances[$id];

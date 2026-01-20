@@ -1,62 +1,38 @@
 {layout $layoutPath}
 
 {block content}
-    <div class="container my-5">
-
         {* Breadcrumbs *}
-    {if count($breadcrumbs) > 0}
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{link Home:default}">Domů</a></li>
-                    {foreach $breadcrumbs as $crumb}
-                        {if $iterator->last}
-                            <li class="breadcrumb-item active" aria-current="page">{$crumb->name}</li>
-                        {else}
-                            <li class="breadcrumb-item">
-                                <a href="{link Category:default, slug => $crumb->url}">{$crumb->name}</a>
-                            </li>
-                        {/if}
-                    {/foreach}
-                </ol>
-            </nav>
+        {include '../components/breadcrumbs.latte', items => $breadcrumbs}
+
+{* Název kategorie *}
+<h1>{$category->name}</h1>
+
+{* Popis kategorie *}
+{if !empty($category->description)}
+            <div class="lead mb-4">
+                {$category->description}
+            </div>
         {/if}
 
-    {* Category Header *}
-    <div class="row mb-4">
-                <div class="col-12">
-                    <h1>{$category->name}</h1>
-                    {if $category->description}
-                        <div class="lead text-muted">
-                            {$category->description}
+{* Podkategorie (pokud existují) *}
+{if count($childCategories) > 0}
+            <div class="mb-5">
+                <h2 class="h4 mb-3">Podkategorie</h2>
+                <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
+                    {foreach $childCategories as $child}
+                        <div class="col">
+                            {include '../components/categoryCard.latte', category => $child}
                         </div>
-                    {/if}
+                    {/foreach}
                 </div>
-    </div>
+            </div>
+        {/if}
 
     {* Products Grid *}
-    <div class="row">
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
                 {foreach $products as $product}
-                    <div class="col-md-4 col-lg-3 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">{$product->name}</h5>
-                                <p class="card-text">
-                                    <strong>{$product->getFormattedPrice()}</strong>
-                                </p>
-                                <p class="card-text">
-                                    <small class="text-muted">
-                                        {if $product->isInStock()}
-                                            <span class="badge bg-success">Skladem</span>
-                                        {else}
-                                            <span class="badge bg-danger">Vyprodáno</span>
-                                        {/if}
-                                    </small>
-                                </p>
-                                <a href="{link Product:detail, id => $product->id}" class="btn btn-primary btn-sm">
-                                    Detail produktu
-                                </a>
-                            </div>
-                        </div>
+                    <div class="col">
+                        {include '../components/productCard.latte', product => $product}
                     </div>
                 {/foreach}
     </div>
@@ -83,6 +59,3 @@
                 </div>
             </div>
         {/if}
-
-    </div>
-{/block}

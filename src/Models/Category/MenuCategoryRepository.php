@@ -189,7 +189,7 @@ class MenuCategoryRepository
      * @param object $row Database row from Nette Database
      * @return MenuCategory MenuCategory entity
      */
-    private function mapToEntity(object $row): MenuCategory
+    public function mapToEntity(object $row): MenuCategory
     {
         return new MenuCategory(
             id: (int) $row->id,
