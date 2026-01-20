@@ -55,6 +55,68 @@ class ProductRepository
     }
 
     /**
+     * Get products for menu category
+     * Returns products from base category + manually assigned products
+     *
+     * @param int $shopId Shop ID
+     * @param array $menuCategoryIds Array of menu category IDs (parent + all descendants)
+     * @return Selection
+     */
+    public function getProductsByMenuCategorySelection(
+        int $shopId,
+        array $menuCategoryIds
+    ): Selection
+    {
+        // Collect all base_category_ids from menu categories
+        $baseCategoryIds = Database::table('es_menu_categories')
+            ->select('base_category_id')
+            ->where('id', $menuCategoryIds)
+            ->fetchPairs(null, 'base_category_id');
+
+        // Collect all manually assigned product IDs from pivot
+        $manualProductIds = Database::table('es_menu_category_products')
+            ->select('product_id')
+            ->where('menu_category_id', $menuCategoryIds)
+            ->fetchPairs(null, 'product_id');
+
+        // Merge all product criteria
+        $productIds = [];
+
+        // Products from base categories
+        if (!empty($baseCategoryIds)) {
+            $categoryProducts = Database::table('es_zbozi')
+                ->select('id')
+                ->where('shop', $shopId)
+                ->where('fl_kategorie', $baseCategoryIds)
+                ->where('fl_zobrazovat', '1')
+                ->fetchPairs(null, 'id');
+
+            $productIds = array_merge($productIds, $categoryProducts);
+        }
+
+        // Add manually assigned products
+        if (!empty($manualProductIds)) {
+            $productIds = array_merge($productIds, $manualProductIds);
+        }
+
+        // Remove duplicates
+        $productIds = array_unique($productIds);
+
+        // Final Selection with unique product IDs
+        if (empty($productIds)) {
+            // No products found - return empty selection
+            return Database::table('es_zbozi')
+                ->where('id', null);
+        }
+
+        return Database::table('es_zbozi')
+            ->where('id', $productIds)
+            ->where('shop', $shopId)
+            ->where('fl_zobrazovat', '1')
+            ->order('nazev ASC');
+    }
+
+    /**
      * Map database rows to Product entities
      *
      * @param iterable $rows Database rows from Selection

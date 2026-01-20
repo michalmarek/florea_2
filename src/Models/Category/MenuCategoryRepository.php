@@ -2,169 +2,210 @@
 
 namespace Models\Category;
 
-use Nette\Database\Explorer;
+use Core\Database;
 use Nette\Database\Table\Selection;
 
+/**
+ * MenuCategoryRepository
+ *
+ * Handles database access for MenuCategory entities.
+ * Shop-specific menu structure with hierarchical organization.
+ *
+ * Database table: es_menu_categories
+ */
 class MenuCategoryRepository
 {
-    private const TABLE_NAME = 'es_menu_categories';
-
-    public function __construct(
-        private Explorer $database,
-    ) {}
+    /**
+     * Standard columns for MenuCategory entity
+     */
+    private const COLUMNS = 'id, shop_id, parent_id, base_category_id, url, name, name_inflected, description, products_description, meta_title, meta_description, image, visible, position';
 
     /**
-     * Get all menu categories for specific shop
+     * Find menu category by ID
+     *
+     * @param int $id Menu category ID
+     * @return MenuCategory|null MenuCategory entity or null if not found
      */
-    public function getMenuCategoriesForShopSelection(int $shopId): Selection
+    public function findById(int $id): ?MenuCategory
     {
-        return $this->database->table(self::TABLE_NAME)
+        $query = "
+            SELECT " . self::COLUMNS . "
+            FROM es_menu_categories
+            WHERE id = ?
+        ";
+
+        $row = Database::query($query, $id)->fetch();
+
+        return $row ? $this->mapToEntity($row) : null;
+    }
+
+    /**
+     * Find menu category by URL slug for specific shop
+     *
+     * @param int $shopId Shop ID
+     * @param string $url URL slug
+     * @return MenuCategory|null MenuCategory entity or null if not found
+     */
+    public function findByUrl(int $shopId, string $url): ?MenuCategory
+    {
+        $query = "
+            SELECT " . self::COLUMNS . "
+            FROM es_menu_categories
+            WHERE shop_id = ? AND url = ?
+        ";
+
+        $row = Database::query($query, $shopId, $url)->fetch();
+
+        return $row ? $this->mapToEntity($row) : null;
+    }
+
+    /**
+     * Get Selection for all visible menu categories in shop
+     * Returns Selection for further manipulation (filtering, sorting)
+     *
+     * @param int $shopId Shop ID
+     * @return Selection
+     */
+    public function getVisibleCategoriesSelection(int $shopId): Selection
+    {
+        return Database::table('es_menu_categories')
             ->where('shop_id', $shopId)
             ->where('visible', 1)
-            ->order('sort_order ASC');
+            ->order('position ASC');
     }
 
     /**
-     * Get menu category by ID
+     * Get Selection for root menu categories (top-level menu items)
+     *
+     * @param int $shopId Shop ID
+     * @return Selection
      */
-    public function getMenuCategoryById(int $id): ?MenuCategory
+    public function getRootCategoriesSelection(int $shopId): Selection
     {
-        $row = $this->database->table(self::TABLE_NAME)
-            ->get($id);
-
-        return $row ? $this->mapRowToEntity($row) : null;
-    }
-
-    /**
-     * Get menu category by slug for specific shop
-     */
-    public function getMenuCategoryBySlug(int $shopId, string $slug): ?MenuCategory
-    {
-        $row = $this->database->table(self::TABLE_NAME)
+        return Database::table('es_menu_categories')
             ->where('shop_id', $shopId)
-            ->where('slug', $slug)
-            ->fetch();
-
-        return $row ? $this->mapRowToEntity($row) : null;
+            ->where('parent_id IS NULL OR parent_id = ?', 0)
+            ->where('visible', 1)
+            ->order('position ASC');
     }
 
     /**
-     * Get child menu categories
+     * Get Selection for child categories of given parent
+     *
+     * @param int $parentId Parent category ID
+     * @return Selection
      */
-    public function getChildMenuCategoriesSelection(int $shopId, int $parentId): Selection
+    public function getChildrenSelection(int $parentId): Selection
     {
-        return $this->database->table(self::TABLE_NAME)
-            ->where('shop_id', $shopId)
+        return Database::table('es_menu_categories')
             ->where('parent_id', $parentId)
             ->where('visible', 1)
-            ->order('sort_order ASC');
+            ->order('position ASC');
     }
 
     /**
-     * Get root menu categories (parent_id IS NULL)
+     * Get all descendant category IDs (recursive)
+     * Returns array of menu category IDs including the parent
+     *
+     * @param int $menuCategoryId Parent menu category ID
+     * @return int[] Array of menu category IDs
      */
-    public function getRootMenuCategoriesSelection(int $shopId): Selection
+    public function getAllDescendantIds(int $menuCategoryId): array
     {
-        return $this->database->table(self::TABLE_NAME)
-            ->where('shop_id', $shopId)
-            ->where('parent_id IS NULL')
-            ->where('visible', 1)
-            ->order('sort_order ASC');
-    }
+        $ids = [$menuCategoryId]; // Start with parent
 
-    /**
-     * Get breadcrumbs from root to current category
-     * Returns array [root, parent, ..., current]
-     */
-    public function getBreadcrumbs(int $categoryId): array
-    {
-        $breadcrumbs = [];
-        $currentId = $categoryId;
+        // Get direct children
+        $children = $this->getChildrenSelection($menuCategoryId);
 
-        while ($currentId !== null) {
-            $category = $this->getMenuCategoryById($currentId);
-
-            if (!$category) {
-                break;
-            }
-
-            // Přidáme na začátek pole (od rootu k current)
-            array_unshift($breadcrumbs, $category);
-
-            $currentId = $category->parent_id;
-        }
-
-        return $breadcrumbs;
-    }
-
-    /**
-     * Get all descendant base category IDs recursively (for product filtering)
-     * Returns array of base_category_ids including the category itself
-     */
-    public function getAllDescendantBaseCategoryIds(int $menuCategoryId): array
-    {
-        $menuIds = $this->getAllDescendantIds($menuCategoryId);
-
-        $baseCategoryIds = $this->database->table(self::TABLE_NAME)
-            ->where('id', $menuIds)
-            ->fetchPairs('id', 'base_category_id');
-
-        return array_unique(array_values($baseCategoryIds));
-    }
-
-    /**
-     * Get all descendant menu IDs recursively (helper method)
-     * Returns array of menu category IDs including the category itself
-     */
-    private function getAllDescendantIds(int $categoryId): array
-    {
-        $ids = [$categoryId];
-        $childIds = $this->getChildIds($categoryId);
-
-        foreach ($childIds as $childId) {
-            $ids = array_merge($ids, $this->getAllDescendantIds($childId));
+        foreach ($children as $child) {
+            // Recursively get all descendants of this child
+            $childIds = $this->getAllDescendantIds($child->id);
+            $ids = array_merge($ids, $childIds);
         }
 
         return array_unique($ids);
     }
 
     /**
-     * Get direct child IDs (helper for getAllDescendantIds)
+     * Get complete category tree for shop as nested array
+     *
+     * Returns hierarchical structure with children nested inside parents.
+     * Useful for rendering complete menu trees.
+     *
+     * @param int $shopId Shop ID
+     * @return array Nested array of MenuCategory entities with 'children' key
      */
-    private function getChildIds(int $parentId): array
+    public function getCategoryTreeForShop(int $shopId): array
     {
-        return $this->database->table(self::TABLE_NAME)
-            ->where('parent_id', $parentId)
-            ->fetchPairs('id', 'id');
+        // Fetch all visible categories for shop
+        $selection = $this->getVisibleCategoriesSelection($shopId);
+        $categories = $this->mapRowsToEntities($selection);
+
+        // Build lookup array by ID
+        $lookup = [];
+        $tree = [];
+
+        foreach ($categories as $category) {
+            $lookup[$category->id] = [
+                'category' => $category,
+                'children' => []
+            ];
+        }
+
+        // Build tree structure
+        foreach ($categories as $category) {
+            if ($category->isRoot()) {
+                // Root category - add to top level
+                $tree[] = &$lookup[$category->id];
+            } else {
+                // Child category - add to parent's children
+                if (isset($lookup[$category->parentId])) {
+                    $lookup[$category->parentId]['children'][] = &$lookup[$category->id];
+                }
+            }
+        }
+
+        return $tree;
+    }
+
+    /**
+     * Map database rows to MenuCategory entities
+     *
+     * @param iterable $rows Database rows from Selection
+     * @return MenuCategory[]
+     */
+    public function mapRowsToEntities(iterable $rows): array
+    {
+        $categories = [];
+        foreach ($rows as $row) {
+            $categories[] = $this->mapToEntity($row);
+        }
+        return $categories;
     }
 
     /**
      * Map database row to MenuCategory entity
+     *
+     * @param object $row Database row from Nette Database
+     * @return MenuCategory MenuCategory entity
      */
-    private function mapRowToEntity($row): MenuCategory
+    private function mapToEntity(object $row): MenuCategory
     {
         return new MenuCategory(
-            id: $row->id,
-            shop_id: $row->shop_id,
-            parent_id: $row->parent_id,
-            base_category_id: $row->base_category_id,
-            name: $row->name,
-            slug: $row->slug,
-            description: $row->description,
-            sortOrder: $row->sort_order,
+            id: (int) $row->id,
+            shopId: (int) $row->shop_id,
+            parentId: $row->parent_id > 0 ? (int) $row->parent_id : null,
+            baseCategoryId: (int) $row->base_category_id,
+            url: $row->url ?? '',
+            name: $row->name ?? '',
+            nameInflected: $row->name_inflected ?? '',
+            description: $row->description ?? '',
+            productsDescription: $row->products_description ?? '',
+            metaTitle: $row->meta_title ?? '',
+            metaDescription: $row->meta_description ?? '',
+            image: $row->image ?? '',
             visible: (bool) $row->visible,
+            position: (int) $row->position,
         );
-    }
-
-    /**
-     * Map multiple rows to entities
-     */
-    public function mapRowsToEntities(Selection $selection): array
-    {
-        $categories = [];
-        foreach ($selection as $row) {
-            $categories[] = $this->mapRowToEntity($row);
-        }
-        return $categories;
     }
 }

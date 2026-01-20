@@ -2,87 +2,109 @@
 
 namespace Models\Category;
 
-use Nette\Database\Explorer;
+use Core\Database;
 use Nette\Database\Table\Selection;
 
+/**
+ * BaseCategoryRepository
+ *
+ * Handles database access for BaseCategory entities.
+ * Maps Czech database columns to English PHP properties.
+ *
+ * Database table: fl_kategorie
+ */
 class BaseCategoryRepository
 {
-    private const TABLE_NAME = 'fl_kategorie';
-
-    public function __construct(
-        private Explorer $database,
-    ) {}
+    /**
+     * Standard columns for BaseCategory entity
+     */
+    private const COLUMNS = 'id, nadrazena, foto, heurekaFeed, zboziFeed, googleFeed, parameterGroups, zobrazovat, poradi';
 
     /**
-     * Get all visible base categories
+     * Find category by ID
+     *
+     * @param int $id Category ID
+     * @return BaseCategory|null BaseCategory entity or null if not found
+     */
+    public function findById(int $id): ?BaseCategory
+    {
+        $query = "
+            SELECT " . self::COLUMNS . "
+            FROM fl_kategorie
+            WHERE id = ?
+        ";
+
+        $row = Database::query($query, $id)->fetch();
+
+        return $row ? $this->mapToEntity($row) : null;
+    }
+
+    /**
+     * Get Selection for all visible base categories
+     * Returns Selection for further manipulation (filtering, sorting)
+     *
+     * @return Selection
      */
     public function getAllCategoriesSelection(): Selection
     {
-        return $this->database->table(self::TABLE_NAME)
+        return Database::table('fl_kategorie')
+            ->where('zobrazovat', '1')
             ->order('poradi ASC');
     }
 
     /**
-     * Get category by ID
+     * Get Selection for child categories of given parent
+     *
+     * @param int $parentId Parent category ID
+     * @return Selection
      */
-    public function getCategoryById(int $id): ?BaseCategory
+    public function getChildrenSelection(int $parentId): Selection
     {
-        $row = $this->database->table(self::TABLE_NAME)
-            ->get($id);
-
-        return $row ? $this->mapRowToEntity($row) : null;
-    }
-
-    /**
-     * Get child categories for given parent
-     */
-    public function getChildCategoriesSelection(int $parentId): Selection
-    {
-        return $this->database->table(self::TABLE_NAME)
+        return Database::table('fl_kategorie')
             ->where('nadrazena', $parentId)
+            ->where('zobrazovat', '1')
             ->order('poradi ASC');
     }
 
     /**
-     * Get root categories (parent_id = 0 or NULL)
+     * Map database rows to BaseCategory entities
+     *
+     * @param iterable $rows Database rows from Selection
+     * @return BaseCategory[]
      */
-    public function getRootCategoriesSelection(): Selection
+    public function mapRowsToEntities(iterable $rows): array
     {
-        return $this->database->table(self::TABLE_NAME)
-            ->where('nadrazena', 0)
-            ->order('poradi ASC');
+        $categories = [];
+        foreach ($rows as $row) {
+            $categories[] = $this->mapToEntity($row);
+        }
+        return $categories;
     }
 
     /**
      * Map database row to BaseCategory entity
+     *
+     * Converts Czech column names to English properties:
+     * - nadrazena → parentId
+     * - foto → photo
+     * - zobrazovat → visible
+     * - poradi → position
+     *
+     * @param object $row Database row from Nette Database
+     * @return BaseCategory BaseCategory entity
      */
-    private function mapRowToEntity($row): BaseCategory
+    private function mapToEntity(object $row): BaseCategory
     {
         return new BaseCategory(
-            id: $row->id,
-            shop_id: $row->shop,
-            parent_id: $row->nadrazena,
+            id: (int) $row->id,
+            parentId: $row->nadrazena > 0 ? (int) $row->nadrazena : null,
             photo: $row->foto ?? '',
             heurekaFeed: $row->heurekaFeed ?? '',
             zboziFeed: $row->zboziFeed ?? '',
             googleFeed: $row->googleFeed ?? '',
-            parameterGroups: $row->parameterGroups
-                ? json_decode($row->parameterGroups, true)
-                : null,
             visible: $row->zobrazovat === '1',
-            sortOrder: $row->poradi,
+            position: (int) $row->poradi,
+            parameterGroups: $row->parameterGroups,
         );
-    }
-
-    /**
-     * Map multiple rows to entities
-     */
-    public function mapRowsToEntities(Selection $selection): array
-    {
-        $categories = [];
-        foreach ($selection as $row) {
-            $categories[] = $this->mapRowToEntity($row);
-        }
-        return $categories;
     }
 }

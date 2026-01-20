@@ -1,0 +1,88 @@
+{layout $layoutPath}
+
+{block content}
+    <div class="container my-5">
+
+        {* Breadcrumbs *}
+    {if count($breadcrumbs) > 0}
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{link Home:default}">Domů</a></li>
+                    {foreach $breadcrumbs as $crumb}
+                        {if $iterator->last}
+                            <li class="breadcrumb-item active" aria-current="page">{$crumb->name}</li>
+                        {else}
+                            <li class="breadcrumb-item">
+                                <a href="{link Category:default, slug => $crumb->url}">{$crumb->name}</a>
+                            </li>
+                        {/if}
+                    {/foreach}
+                </ol>
+            </nav>
+        {/if}
+
+    {* Category Header *}
+    <div class="row mb-4">
+                <div class="col-12">
+                    <h1>{$category->name}</h1>
+                    {if $category->description}
+                        <div class="lead text-muted">
+                            {$category->description}
+                        </div>
+                    {/if}
+                </div>
+    </div>
+
+    {* Products Grid *}
+    <div class="row">
+                {foreach $products as $product}
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{$product->name}</h5>
+                                <p class="card-text">
+                                    <strong>{$product->getFormattedPrice()}</strong>
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        {if $product->isInStock()}
+                                            <span class="badge bg-success">Skladem</span>
+                                        {else}
+                                            <span class="badge bg-danger">Vyprodáno</span>
+                                        {/if}
+                                    </small>
+                                </p>
+                                <a href="{link Product:detail, id => $product->id}" class="btn btn-primary btn-sm">
+                                    Detail produktu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {/foreach}
+    </div>
+
+    {* Pagination *}
+    {if $pagination['lastPage'] > 1}
+            {include '../components/pagination.latte',
+            page: $pagination['page'],
+            lastPage: $pagination['lastPage'],
+            destination: 'Category:default',
+            params: ['slug' => $category->url]
+            }
+        {/if}
+
+    {* Category Products Description (SEO text) *}
+    {if $category->productsDescription}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            {$category->productsDescription|noescape}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {/if}
+
+    </div>
+{/block}

@@ -14,6 +14,8 @@ return [
         'presenter' => 'ShopInfo',
         'action' => 'default',
     ],
+
+    // === PRODUKTY ===
     [
         'pattern' => 'produkty',  // ← Stejné pro všechny jazyky
         'presenter' => 'Product',
@@ -23,6 +25,17 @@ return [
         'pattern' => 'produkt/<id>',  // ← Stejné pro všechny jazyky
         'presenter' => 'Product',
         'action' => 'detail',
+    ],
+
+    // === KATEGORIE ===
+    [
+        'patterns' => [
+            'cs' => 'produkty/<slug>',
+            'en' => 'products/<slug>',
+            'de' => 'produkte/<slug>',
+        ],
+        'presenter' => 'Category',
+        'action' => 'default',
     ],
 
     // Jak objednat
@@ -66,26 +79,6 @@ return [
             'de' => 'kontakt',
         ],
         'presenter' => 'Contact',
-        'action' => 'default',
-    ],
-
-    // Produkty
-    [
-        'patterns' => [
-            'cs' => 'produkty/<slug>',
-            'en' => 'products/<slug>',
-            'de' => 'produkte/<slug>',
-        ],
-        'presenter' => 'Products',
-        'action' => 'detail',
-    ],
-    [
-        'patterns' => [
-            'cs' => 'produkty',
-            'en' => 'products',
-            'de' => 'produkte',
-        ],
-        'presenter' => 'Products',
         'action' => 'default',
     ],
 ];

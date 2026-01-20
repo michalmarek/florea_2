@@ -2,18 +2,66 @@
 
 namespace Models\Category;
 
+/**
+ * BaseCategory Entity
+ *
+ * Represents internal product categorization from fl_kategorie table.
+ * Used for internal product classification, feeds, and parameter groups.
+ *
+ * Uses hybrid approach:
+ * - Public readonly: Simple data passthrough
+ * - Private readonly + getter: Data with business logic
+ */
 class BaseCategory
 {
     public function __construct(
+        // === Public readonly (simple passthrough) ===
         public readonly int $id,
-        public readonly int $shop_id,
-        public readonly int $parent_id,
+        public readonly ?int $parentId,
         public readonly string $photo,
         public readonly string $heurekaFeed,
         public readonly string $zboziFeed,
         public readonly string $googleFeed,
-        public readonly ?array $parameterGroups,
-        public readonly bool $visible,       // legacy
-        public readonly int $sortOrder,
+        public readonly bool $visible,
+        public readonly int $position,
+
+        // === Private readonly (with business logic) ===
+        private readonly ?string $parameterGroups,  // JSON string
     ) {}
+
+    // === Getters with logic ===
+
+    /**
+     * Get parameter groups as decoded array
+     *
+     * @return array Decoded parameter groups or empty array if null/invalid
+     */
+    public function getParameterGroups(): array
+    {
+        if ($this->parameterGroups === null || $this->parameterGroups === '') {
+            return [];
+        }
+
+        $decoded = json_decode($this->parameterGroups, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    // === Helper methods ===
+
+    /**
+     * Check if category is root (has no parent)
+     */
+    public function isRoot(): bool
+    {
+        return $this->parentId === null || $this->parentId === 0;
+    }
+
+    /**
+     * Check if category has parameter groups configured
+     */
+    public function hasParameterGroups(): bool
+    {
+        return !empty($this->getParameterGroups());
+    }
 }
