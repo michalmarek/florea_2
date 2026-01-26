@@ -1,4 +1,3 @@
-{import "layoutParts.latte"}
 <!DOCTYPE html>
 <html lang="{$lang}">
 <head>
@@ -13,7 +12,6 @@
 <body>
 
 
-
 {* Header with logo and main navigation *}
 <header class="border-bottom mb-4">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -25,18 +23,27 @@
 
             {* Main menu *}
             <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    {foreach $layoutData->getMainMenuData() as $item}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle"
-                               href="{link Category:default, slug => $item['category']->url}"
-                               role="button"
-                               data-bs-toggle="dropdown"
-                               aria-expanded="false">
-                                {$item['category']->name}
-                            </a>
+                <ul class="navbar-nav ms-auto gap-1">
+                    {foreach $layoutData["mainMenu"] as $item}
+                        {if count($item['children']) > 0}
+                            {* Kategorie s podkategoriemi - SPLIT BUTTON *}
+                            <li class="nav-item dropdown">
+                                <div class="btn-group" role="group">
+                                    {* Levá část - odkaz na kategorii *}
+                                <a href="{link Category:default, slug => $item['category']->url}"
+                                   class="btn btn-secondary">
+                                    {$item['category']->name}
+                                </a>
 
-                            {if count($item['children']) > 0}
+                                {* Pravá část - dropdown toggle *}
+                                <button type="button"
+                                    class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+
+                                {* Dropdown menu s podkategoriemi *}
                                 <ul class="dropdown-menu">
                                     {foreach $item['children'] as $child}
                                         <li>
@@ -47,10 +54,33 @@
                                         </li>
                                     {/foreach}
                                 </ul>
-                            {/if}
+                            </div>
                         </li>
-                    {/foreach}
+                    {else}
+                        {* Kategorie bez podkategorií - přímý odkaz *}
+                        <li class="nav-item">
+                            <a class="btn btn-secondary"
+                               href="{link Category:default, slug => $item['category']->url}">
+                                {$item['category']->name}
+                            </a>
+                        </li>
+                    {/if}
+                {/foreach}
                 </ul>
+            </div>
+
+
+            {* Customer Info *}
+            <div class="user-menu ms-3 small">
+                {if $customer->isLoggedIn}
+                    Přihlášen jako: <strong>{$customer->firstName} {$customer->lastName}</strong><br>
+                    <a href="{link Account:profile}">Můj účet</a> |
+                    <a href="{link Auth:logout}">Odhlásit</a>
+                {else}
+                    Nejste přihlášen<br>
+                    <a href="{link Auth:login}">Přihlásit se</a> |
+                    <a href="{link Auth:register}">Registrace</a>
+                {/if}
             </div>
         </div>
     </nav>
@@ -59,16 +89,15 @@
 
 {* Flash messages *}
 {if isset($flashes) && count($flashes) > 0}
-<div class="container">
-    {foreach $flashes as $flash}
-        <div class="alert alert-{$flash['type']} alert-dismissible fade show" role="alert">
-            {$flash['message']}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    {/foreach}
-</div>
+    <div class="container">
+        {foreach $flashes as $flash}
+            <div class="alert alert-{$flash->type} alert-dismissible fade show" role="alert">
+                {$flash->message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {/foreach}
+    </div>
 {/if}
-
 
 {* Main content *}
 <main class="container">
@@ -80,8 +109,8 @@
 <footer class="border-top mt-5 py-4 text-center text-muted">
     <div class="container">
         <p class="mb-0">
-            &copy; {$layoutData->getFooterData()['year']}
-            {$layoutData->getFooterData()['companyName']}
+            &copy; {$layoutData["footer"]->year}
+            {$layoutData["footer"]->companyName}
         </p>
     </div>
 </footer>
