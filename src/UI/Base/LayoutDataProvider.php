@@ -21,10 +21,7 @@ class LayoutDataProvider
 
     public function __construct(
         private ShopContext $shopContext,
-        private MenuCategoryRepository $menuCategoryRepository,
-        // Další repositories se přidají postupně podle potřeby:
-        // private CustomerRepository $customerRepository,
-        // private NewsletterRepository $newsletterRepository,
+        private MenuCategoryRepository $menuCategoryRepository
     ) {}
 
     /**
@@ -64,38 +61,21 @@ class LayoutDataProvider
     }
 
     /**
-     * Get user menu data (login status, customer info)
-     *
-     * TODO: Implement when CustomerRepository is ready
-     * Will provide: login status, customer name, account links
-     *
-     * @return array User menu data
-     */
-    public function getUserMenuData(): array
-    {
-        // Placeholder pro budoucnost
-        return [
-            'isLoggedIn' => false,
-            'customerName' => null,
-            'loginUrl' => '#', // TODO: proper route
-            'accountUrl' => '#',
-        ];
-    }
-
-    /**
      * Get footer data (footer menu, contact info, etc.)
      *
      * TODO: Implement based on requirements
      *
-     * @return array Footer data
+     * @return object Footer data
      */
-    public function getFooterData(): array
+    public function getFooterData(): object
     {
+        $data = new \stdClass();
+
+        $data->companyName = $this->shopContext->getWebsiteName();
+        $data->year = date('Y');
+
         // Placeholder
-        return [
-            'companyName' => $this->shopContext->getWebsiteName(),
-            'year' => date('Y'),
-        ];
+        return $data;
     }
 
     /**

@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 // Načtu vendory
 require __DIR__ . '/vendor/autoload.php';
@@ -55,6 +53,33 @@ try {
         return new \Models\Product\ProductRepository();
     });
 
+    // MenuCategoryRepository
+    $container->register(\Models\Category\MenuCategoryRepository::class, function($c) {
+        return new \Models\Category\MenuCategoryRepository();
+    });
+
+    // CustomerRepository
+    $container->register(\Models\Customer\CustomerRepository::class, function($c) {
+        return new \Models\Customer\CustomerRepository();
+    });
+
+    // CustomerAuthService
+    $container->register(\Models\Customer\CustomerAuthService::class, function($c) {
+        return new \Models\Customer\CustomerAuthService(
+            $c->get(\Models\Customer\CustomerRepository::class),
+            $c->get(ShopContext::class)
+        );
+    });
+
+    // LayoutDataProvider
+    $container->register(\UI\Base\LayoutDataProvider::class, function($c) {
+        return new \UI\Base\LayoutDataProvider(
+            $c->get(ShopContext::class),
+            $c->get(\Models\Category\MenuCategoryRepository::class),
+            $c->get(\Models\Customer\CustomerAuthService::class)
+        );
+    });
+
 } catch (ShopNotFoundException $e) {
     // Vlastní 404 pro neznámou doménu
     http_response_code(404);
@@ -78,6 +103,12 @@ Tracy\Debugger::enable(
 if (Config::get('app')['debugger']['mode'] === Tracy\Debugger::Development) {
     Tracy\Debugger::barDump($shopContext, 'ShopContext');
     Tracy\Debugger::barDump(Config::get('app'), 'App Config');
+}
+
+// Pokud není přihlášený v session, zkus Remember Me token
+if (!isset($_SESSION['customer']) && isset($_COOKIE['remember_token'])) {
+    $customerAuthService = $container->get(\Models\Customer\CustomerAuthService::class);
+    $customerAuthService->verifyRememberToken();
 }
 
 // Vytvoření a spuštění aplikace

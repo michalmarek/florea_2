@@ -14,6 +14,8 @@ use Nette\Forms\Form;
 use Nette\Http\IRequest;
 use Nette\Routing\Router;
 use Shop\ShopContext;
+use Models\Customer\Customer;
+use Models\Customer\CustomerAuthService;
 
 /**
  * BasePresenter - Základní třída pro všechny presentery
@@ -92,11 +94,17 @@ abstract class BasePresenter
     protected array $templateVars = [];
     protected ?string $lang = null;
     private array $components = [];
-    private ?LayoutDataProvider $layoutDataProvider = null;
+    private ?Customer $customerCache = null;
+    protected ShopContext $shopContext;
+    protected LayoutDataProvider $layoutDataProvider;
+    protected CustomerAuthService $customerAuthService;
 
-    public function __construct(
-        protected ShopContext $shopContext
-    ) {
+    public function __construct(Container $container) {
+        $this->shopContext = $container->get(ShopContext::class);
+        $this->layoutDataProvider = $container->get(LayoutDataProvider::class);
+        $this->customerAuthService = $container->get(CustomerAuthService::class);
+
+
         // Inicializace Latte
         $this->latte = new Engine;
         $this->latte->setTempDirectory(Config::get('app.latte.tempDirectory'));
@@ -173,28 +181,6 @@ abstract class BasePresenter
     }
 
     /**
-     * Get layout data provider (lazy initialized)
-     *
-     * Autowired through DI container.
-     * Shop-specific presenters can override for custom implementation.
-     *
-     * @return LayoutDataProvider Layout data provider instance
-     */
-    protected function getLayoutDataProvider(): LayoutDataProvider
-    {
-        if ($this->layoutDataProvider === null) {
-            // LayoutDataProvider will be autowired with all dependencies
-            // No need to pass ShopContext manually - Container handles it
-            $this->layoutDataProvider = new LayoutDataProvider(
-                $this->shopContext,
-                new \Models\Category\MenuCategoryRepository()
-            );
-        }
-
-        return $this->layoutDataProvider;
-    }
-
-    /**
      * Startup metoda - volá se před akcí
      */
     protected function startup(): void
@@ -220,8 +206,14 @@ abstract class BasePresenter
         // Nastavení layoutu pro všechny template
         $this->templateVars['layoutPath'] = $this->getLayoutPath();
 
-        // Layout data provider for menu, user info, etc.
-        $this->templateVars['layoutData'] = $this->getLayoutDataProvider();
+        // Layout data provider for menus, etc.
+        $this->templateVars['layoutData'] = [
+            'mainMenu' => $this->layoutDataProvider->getMainMenuData(),
+            'footer' => $this->layoutDataProvider->getFooterData(),
+        ];
+
+        // Customer session data (no SQL)
+        $this->assign('customer', $this->customerAuthService->createViewModel());
 
         // Přidání reference na presenter do template (pro {link} makro)
         $this->templateVars['_presenter'] = $this;
@@ -249,17 +241,22 @@ abstract class BasePresenter
     /**
      * Získá všechny flash zprávy a vymaže je ze session
      *
-     * @return array Pole flash zpráv ve formátu [['message' => '...', 'type' => '...'], ...]
+     * @return object[] Pole flash message objektů
      */
     private function getFlashMessages(): array
     {
-
         $flashes = $_SESSION['_flashes'] ?? [];
 
         // Vymazání flash zpráv ze session (zobrazují se jen jednou)
         unset($_SESSION['_flashes']);
 
-        return $flashes;
+        // Převést na objekty
+        return array_map(function($flash) {
+            $obj = new \stdClass();
+            $obj->message = $flash['message'];
+            $obj->type = $flash['type'];
+            return $obj;
+        }, $flashes);
     }
 
     /**
@@ -471,5 +468,69 @@ abstract class BasePresenter
     public function getParam(string $name, mixed $default = null): mixed
     {
         return $this->params[$name] ?? $default;
+    }
+
+    /**
+     * Check if customer is logged in
+     *
+     * @return bool
+     */
+    protected function isLoggedIn(): bool
+    {
+        return $this->customerAuthService->isLoggedIn();
+    }
+
+    /**
+     * Get currently logged in customer
+     *
+     * @return Customer|null
+     */
+    protected function getCustomer(): ?Customer
+    {
+        if ($this->customerCache === null) {
+            $this->customerCache = $this->customerAuthService->getCurrentCustomer();
+        }
+
+        return $this->customerCache;
+    }
+
+    /**
+     * Require customer to be logged in
+     * Redirect to login page if not authenticated
+     */
+    protected function requireLogin(): void
+    {
+        if (!$this->isLoggedIn()) {
+            $this->flashMessage('Pro pokračování se prosím přihlaste', 'warning');
+            $this->redirect('Auth:login', ['backlink' => $this->storeRequest()]);
+        }
+    }
+
+    /**
+     * Store current request for later restoration (backlink)
+     *
+     * @return string Backlink key
+     */
+    protected function storeRequest(): string
+    {
+        $key = uniqid('backlink_', true);
+        $_SESSION['backlinkStorage'][$key] = $_SERVER['REQUEST_URI'] ?? '/';
+        return $key;
+    }
+
+    /**
+     * Restore request from backlink key and redirect
+     *
+     * @param string $key Backlink key
+     * @return void
+     */
+    protected function restoreRequest(string $key): void
+    {
+        if (isset($_SESSION['backlinkStorage'][$key])) {
+            $url = $_SESSION['backlinkStorage'][$key];
+            unset($_SESSION['backlinkStorage'][$key]);
+            header("Location: $url");
+            exit;
+        }
     }
 }
