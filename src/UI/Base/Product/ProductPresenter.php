@@ -2,9 +2,9 @@
 
 namespace UI\Base\Product;
 
+use Core\Container;
 use UI\Base\BasePresenter;
 use Models\Product\ProductRepository;
-use Shop\ShopContext;
 
 /**
  * ProductPresenter
@@ -14,10 +14,10 @@ use Shop\ShopContext;
 class ProductPresenter extends BasePresenter
 {
     public function __construct(
-        ShopContext $shopContext,
+        Container $container,
         private ProductRepository $productRepository
     ) {
-        parent::__construct($shopContext);
+        parent::__construct($container);
     }
 
     /**

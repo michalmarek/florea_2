@@ -2,8 +2,8 @@
 
 namespace UI\Base\Category;
 
+use Core\Container;
 use UI\Base\BasePresenter;
-use Shop\ShopContext;
 use Models\Category\MenuCategoryRepository;
 use Models\Product\ProductRepository;
 
@@ -15,11 +15,11 @@ use Models\Product\ProductRepository;
 class CategoryPresenter extends BasePresenter
 {
     public function __construct(
-        ShopContext $shopContext,
+        Container $container,
         private MenuCategoryRepository $menuCategoryRepository,
         private ProductRepository $productRepository
     ) {
-        parent::__construct($shopContext);
+        parent::__construct($container);
     }
 
     public function actionDefault(string $slug, int $p = 1): void
