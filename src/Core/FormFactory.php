@@ -83,7 +83,7 @@ class FormFactory
         $renderer->wrappers['control']['description'] = 'span class="form-text"';
         $renderer->wrappers['control']['errorcontainer'] = 'span class="invalid-feedback d-block"';
         $renderer->wrappers['error']['container'] = 'div class="alert alert-danger"';
-        $renderer->wrappers['error']['item'] = 'p';
+        $renderer->wrappers['error']['item'] = 'p class="m-0"';
 
         // Úprava HTML elementů
         $form->onRender[] = function (Form $form) {

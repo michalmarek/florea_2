@@ -1,0 +1,23 @@
+{layout $layoutPath}
+{block content}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Upravit profil</h3>
+                    </div>
+                    <div class="card-body">
+                        {control profileForm}
+
+                        <hr>
+
+                        <p class="text-center mb-0">
+                            <a href="{link Account:profile}">← Zpět na profil</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{/block}
