@@ -13,7 +13,9 @@
         "nette/utils": "^4.0",
         "nette/assets": "^1.0",
         "nette/forms": "^3.2",
-        "rosell-dk/webp-convert": "^2.9"
+        "rosell-dk/webp-convert": "^2.9",
+        "nette/mail": "^4.0",
+        "xqueue/maileon-api-client": "^1.0"
     },
     "autoload": {
         "psr-4": {

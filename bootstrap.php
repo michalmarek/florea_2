@@ -75,10 +75,62 @@ try {
     $container->register(\UI\Base\LayoutDataProvider::class, function($c) {
         return new \UI\Base\LayoutDataProvider(
             $c->get(ShopContext::class),
-            $c->get(\Models\Category\MenuCategoryRepository::class),
-            $c->get(\Models\Customer\CustomerAuthService::class)
+            $c->get(\Models\Category\MenuCategoryRepository::class)
         );
     });
+
+
+
+    // Load email configuration
+    $emailConfig = require __DIR__ . '/config/common/email.php';
+
+// Register Nette SMTP Mailer
+    $container->register(\Nette\Mail\Mailer::class, function() use ($emailConfig) {
+        $mailer = new \Nette\Mail\SmtpMailer(
+            host: $emailConfig['smtp']['host'],
+            port: $emailConfig['smtp']['port'],
+            username: $emailConfig['smtp']['username'],
+            password: $emailConfig['smtp']['password'],
+            encryption: $emailConfig['smtp']['encryption'],
+        );
+
+        return $mailer;
+    });
+
+// Register Maileon Provider
+    $container->register(\Core\Email\Provider\MaileonProvider::class, function() use ($emailConfig) {
+        return new \Core\Email\Provider\MaileonProvider(
+            $emailConfig['maileon']['apiKey'],
+            $emailConfig['maileon']['baseUrl']
+        );
+    });
+
+// Register Nette Mail Provider
+    $container->register(\Core\Email\Provider\NetteMailProvider::class, function($c) use ($emailConfig) {
+        return new \Core\Email\Provider\NetteMailProvider(
+            $c->get(\Nette\Mail\Mailer::class),
+            $emailConfig['from']['email'],
+            $emailConfig['from']['name']
+        );
+    });
+
+// Register EmailService (main service)
+    $container->register(\Core\Email\EmailService::class, function($c) use ($emailConfig) {
+        // Build log path from app config + email config
+        $appConfig = Config::get('app');
+        $logPath = $emailConfig['logging']['enabled']
+            ? $appConfig['paths']['log'] . '/' . $emailConfig['logging']['filename']
+            : null;
+
+        return new \Core\Email\EmailService(
+            $c->get(\Core\Email\Provider\MaileonProvider::class),
+            $c->get(\Core\Email\Provider\NetteMailProvider::class),
+            $emailConfig['logging']['enabled'],
+            $logPath
+        );
+    });
+
+
 
 } catch (ShopNotFoundException $e) {
     // Vlastní 404 pro neznámou doménu

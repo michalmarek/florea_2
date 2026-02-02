@@ -115,4 +115,18 @@ return [
         'presenter' => 'Account',
         'action' => 'editAddress',
     ],
+    [
+        'patterns' => [
+            'cs' => 'muj-ucet/test-email',
+        ],
+        'presenter' => 'Account',
+        'action' => 'testEmail',
+    ],
+    [
+        'patterns' => [
+            'cs' => 'muj-ucet/test-maileon',
+        ],
+        'presenter' => 'Account',
+        'action' => 'testMaileon',
+    ],
 ];

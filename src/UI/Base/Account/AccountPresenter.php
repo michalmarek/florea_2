@@ -17,6 +17,7 @@ class AccountPresenter extends BasePresenter
         protected CustomerAuthService $customerAuthService,
         protected CustomerRepository $customerRepository,
         protected DeliveryAddressRepository $deliveryAddressRepository,
+        protected \Core\Email\EmailService $emailService,
     ) {
         parent::__construct($container);
     }
@@ -398,4 +399,122 @@ class AccountPresenter extends BasePresenter
             $form->addError($e->getMessage());
         }
     }
+
+
+
+
+    public function actionTestEmail(): void
+    {
+        // Create test SMTP email
+        $message = new \Core\Email\EmailMessage(
+            to: 'test@example.com',
+            subject: 'Test SMTP Email z Florea.cz',
+            htmlBody: '
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #007bff; color: white; padding: 20px; }
+                    .content { padding: 20px; border: 1px solid #ddd; }
+                    .footer { padding: 10px; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Test SMTP Email</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Email systém funguje! ✅</h2>
+                        <p>Tento email byl odeslán z <strong>Florea.cz</strong> redesignu.</p>
+                        <p>Použitý provider: <strong>NetteMailProvider (SMTP)</strong></p>
+                        <p>Server: <strong>MailHog (localhost:1025)</strong></p>
+                        <hr>
+                        <p>Čas odeslání: <strong>' . date('d.m.Y H:i:s') . '</strong></p>
+                        <p>Shop: <strong>xxx</strong></p>
+                    </div>
+                    <div class="footer">
+                        Toto je testovací email z email integrace.
+                    </div>
+                </div>
+            </body>
+            </html>
+        ',
+            textBody: 'Test SMTP Email - Email systém funguje! Čas: ' . date('d.m.Y H:i:s')
+        );
+
+        try {
+            // Send email
+            $this->emailService->send($message);
+
+            $this->flashMessage('✅ Email byl úspěšně odeslán! Zkontroluj MailHog na http://localhost:8025', 'success');
+
+        } catch (\Exception $e) {
+            $this->flashMessage('❌ Chyba při odesílání: ' . $e->getMessage(), 'danger');
+        }
+
+        // Redirect back to profile
+        $this->redirect('Account:profile');
+    }
+
+    public function actionTestMaileon(): void
+    {
+        // Load email config
+        $emailConfig = \Core\Config::get('email');
+
+        // Get current customer (if logged in) or use dummy data
+        $customer = $this->getCustomer();
+
+        if ($customer) {
+            $recipientEmail = $customer->email;
+        } else {
+            // Not logged in - use test data
+            $recipientEmail = 'ahoj@michal-marek.cz';  // ← Změň na svůj testovací email!
+        }
+        $recipientEmail = 'ahoj@michal-marek.cz';  // ← Změň na svůj testovací email!
+
+        // Get Event ID from config
+        $eventId = $emailConfig['maileon']['events']['passwordReset'];
+
+        // Create Maileon email
+        $message = new \Core\Email\EmailMessage(
+            to: $recipientEmail,
+            subject: 'Test Maileon Email - Password Reset',
+            maileonEventId: $eventId,
+            personalizedData: [
+                'reset_url' => "url",
+                'shopID' => 2,
+                'lang' => 'cs',
+            ]
+        );
+
+        try {
+            // Send email
+            $this->emailService->send($message);
+
+            $this->flashMessage(
+                "✅ Maileon email byl úspěšně odeslán na {$recipientEmail}! " .
+                "Zkontroluj svou mailovou schránku.",
+                'success'
+            );
+
+        } catch (\Exception $e) {
+            $this->flashMessage(
+                '❌ Chyba při odesílání Maileon emailu: ' . $e->getMessage(),
+                'danger'
+            );
+
+            // Log error for debugging
+            error_log('[Maileon Test Error] ' . $e->getMessage());
+        }
+
+        // Redirect back to profile
+        $this->redirect('Account:profile');
+    }
+
+
+
+
+
 }
