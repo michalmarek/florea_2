@@ -64,6 +64,20 @@ return [
         'presenter' => 'Auth',
         'action' => 'register',
     ],
+    [
+        'patterns' => [
+            'cs' => 'ztracene-heslo',
+        ],
+        'presenter' => 'Auth',
+        'action' => 'forgotPassword',
+    ],
+    [
+        'patterns' => [
+            'cs' => 'reset-hesla',
+        ],
+        'presenter' => 'Auth',
+        'action' => 'resetPassword',
+    ],
 
     // === ACCOUNT (Můj účet) ===
     [

@@ -1,5 +1,8 @@
 <?php declare(strict_types=1);
 
+// Set timezone for entire application
+date_default_timezone_set('Europe/Prague');
+
 // Načtu vendory
 require __DIR__ . '/vendor/autoload.php';
 
@@ -149,6 +152,21 @@ $container->register(\Core\Email\EmailService::class, function($c) {
         $c->get(\Core\Email\Provider\NetteMailProvider::class),
         Config::get('email.logging.enabled'),
         $logPath
+    );
+});
+
+
+// Password Reset
+$container->register(\Models\Customer\PasswordResetTokenRepository::class, function() {
+    return new \Models\Customer\PasswordResetTokenRepository();
+});
+
+$container->register(\Models\Customer\PasswordResetService::class, function($c) {
+    return new \Models\Customer\PasswordResetService(
+        $c->get(\Models\Customer\CustomerRepository::class),
+        $c->get(\Models\Customer\PasswordResetTokenRepository::class),
+        $c->get(\Core\Email\EmailService::class),
+        $c->get(ShopContext::class),
     );
 });
 

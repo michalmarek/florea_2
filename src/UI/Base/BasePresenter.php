@@ -463,11 +463,33 @@ abstract class BasePresenter
     }
 
     /**
-     * Získání parametru z URL
+     * Get parameter from request (GET or POST)
+     *
+     * @param string $name Parameter name
+     * @param mixed $default Default value if not found
+     * @return mixed Parameter value or default
      */
-    public function getParam(string $name, mixed $default = null): mixed
+    protected function getParam(string $name, $default = null)
     {
-        return $this->params[$name] ?? $default;
+        // POST má prioritu (form submit)
+        if (isset($_POST[$name])) {
+            return $_POST[$name];
+        }
+
+        // Fallback na GET (URL parameter)
+        if (isset($_GET[$name])) {
+            return $_GET[$name];
+        }
+
+        return $default;
+    }
+
+    /**
+     * Check if request is POST
+     */
+    protected function isPost(): bool
+    {
+        return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 
     /**

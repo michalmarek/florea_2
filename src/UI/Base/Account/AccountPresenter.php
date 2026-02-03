@@ -223,6 +223,14 @@ class AccountPresenter extends BasePresenter
         try {
             $customer = $this->getCustomer();
 
+            // Validate email uniqueness if changed
+            if ($values->email !== $customer->email) {
+                if ($this->customerRepository->emailExistsForAnotherCustomer($values->email, $customer->id)) {
+                    $form->addError('Tento email již používá jiný zákazník');
+                    return;
+                }
+            }
+
             // Update customer in database
             $this->customerRepository->update($customer->id, [
                 'email' => $values->email,

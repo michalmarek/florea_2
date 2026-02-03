@@ -251,14 +251,14 @@ class CustomerAuthService
      */
     public function register(array $data): Customer
     {
-        // Check email uniqueness
-        if ($this->customerRepository->emailExists($data['email'])) {
-            throw new \Exception('Email již existuje');
-        }
-
-        // Check login uniqueness
+        // Check if login already exists
         if ($this->customerRepository->loginExists($data['login'])) {
             throw new \Exception('Login již existuje');
+        }
+
+        // Check if email is already taken (in login OR fak_email of any customer)
+        if ($this->customerRepository->findByEmail($data['email'])) {
+            throw new \Exception('Email již existuje');
         }
 
         // Add current shop ID

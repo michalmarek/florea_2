@@ -90,29 +90,59 @@ class CustomerRepository
     }
 
     /**
-     * Check if email already exists in database
+     * Find customer by email (fak_email OR login)
      *
-     * @param string $email Email to check
-     * @param int|null $excludeId Customer ID to exclude from check (for profile edit)
-     * @return bool True if email exists
+     * Used for password reset - finds customer by their email address.
+     * Searches in both login and fak_email to handle cases where:
+     * - Customer uses original login email (login === fak_email)
+     * - Customer changed fak_email but remembers it
+     *
+     * Safe to use because emailExistsForAnotherCustomer() prevents duplicates,
+     * so this will always return max 1 customer.
+     *
+     * @param string $email Customer email
+     * @return Customer|null Customer entity or null if not found
      */
-    public function emailExists(string $email, ?int $excludeId = null): bool
+    public function findByEmail(string $email): ?Customer
     {
         $query = "
-            SELECT COUNT(*) as count
-            FROM es_uzivatele
-            WHERE fak_email = ?
-        ";
+        SELECT " . self::COLUMNS . "
+        FROM es_uzivatele
+        WHERE login = ? OR fak_email = ?
+        LIMIT 1
+    ";
 
-        $params = [$email];
+        $row = Database::query($query, $email, $email)->fetch();
 
-        // Při editaci profilu vyloučíme aktuálního zákazníka
-        if ($excludeId !== null) {
-            $query .= " AND id != ?";
-            $params[] = $excludeId;
-        }
+        return $row ? $this->mapToEntity($row) : null;
+    }
 
-        $row = Database::query($query, ...$params)->fetch();
+    /**
+     * Check if email exists for another customer
+     *
+     * Checks if email is used by ANY other customer (in login OR fak_email).
+     * Allows customer to use same email in their own login and fak_email,
+     * but prevents using email that belongs to another customer.
+     *
+     * Used for:
+     * - Profile email change validation
+     * - Registration email validation
+     * - Password reset email lookup
+     *
+     * @param string $email Email to check
+     * @param int $customerId Current customer ID to exclude from check
+     * @return bool True if email is used by another customer
+     */
+    public function emailExistsForAnotherCustomer(string $email, int $customerId): bool
+    {
+        $query = "
+        SELECT COUNT(*) as count
+        FROM es_uzivatele
+        WHERE (login = ? OR fak_email = ?)
+          AND id != ?
+    ";
+
+        $row = Database::query($query, $email, $email, $customerId)->fetch();
 
         return $row->count > 0;
     }

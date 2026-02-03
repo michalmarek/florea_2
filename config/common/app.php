@@ -39,6 +39,21 @@ return [
         'url' => '/assets',
     ],
 
+    // Zákaznické účty
+    'customer' => [
+        'password_reset' => [
+            'token_expiration' => 3600,      // 1 hodina (v sekundách)
+            'rate_limit' => [
+                'max_attempts' => 3,          // Max 3 požadavky
+                'window_minutes' => 15,       // za 15 minut
+            ],
+        ],
+        'session' => [
+            'timeout' => 7200,                // 2 hodiny (můžeš přidat později)
+            'remember_me_days' => 30,         // Remember Me (už máš)
+        ],
+    ],
+
     // Tracy debugger
     'debugger' => [
         'mode' => Tracy\Debugger::Development, // nebo Production
