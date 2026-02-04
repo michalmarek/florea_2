@@ -15,9 +15,9 @@ namespace Models\Category;
 class BaseCategory
 {
     public function __construct(
-        // === Public readonly (simple passthrough) ===
         public readonly int $id,
         public readonly ?int $parentId,
+        public readonly ?int $variantParameterGroupId,
         public readonly string $photo,
         public readonly string $heurekaFeed,
         public readonly string $zboziFeed,
@@ -25,7 +25,6 @@ class BaseCategory
         public readonly bool $visible,
         public readonly int $position,
 
-        // === Private readonly (with business logic) ===
         private readonly ?string $parameterGroups,  // JSON string
     ) {}
 

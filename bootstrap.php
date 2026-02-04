@@ -83,6 +83,25 @@ $container->register(\Models\Product\ProductRepository::class, function($c) {
     return new \Models\Product\ProductRepository();
 });
 
+// BaseCategoryRepository
+$container->register(\Models\Category\BaseCategoryRepository::class, function($c) {
+    return new \Models\Category\BaseCategoryRepository();
+});
+
+// ParameterGroupRepository
+$container->register(\Models\Parameter\ParameterGroupRepository::class, function($c) {
+    return new \Models\Parameter\ParameterGroupRepository();
+});
+
+// ProductVariantService
+$container->register(\Models\Product\ProductVariantService::class, function($c) {
+    return new \Models\Product\ProductVariantService(
+        $c->get(\Models\Product\ProductRepository::class),
+        $c->get(\Models\Category\BaseCategoryRepository::class),
+        $c->get(\Models\Parameter\ParameterGroupRepository::class)
+    );
+});
+
 // MenuCategoryRepository
 $container->register(\Models\Category\MenuCategoryRepository::class, function($c) {
     return new \Models\Category\MenuCategoryRepository();

@@ -19,6 +19,7 @@ class Product
         public readonly int $shopId,
         public readonly int $sellerId,
         public readonly int $categoryId,
+        public readonly ?string $groupCode,
         public readonly string $name,
         public readonly float $stock,
         public readonly bool $visible,

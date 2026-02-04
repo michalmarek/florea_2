@@ -18,7 +18,7 @@ class BaseCategoryRepository
     /**
      * Standard columns for BaseCategory entity
      */
-    private const COLUMNS = 'id, nadrazena, foto, heurekaFeed, zboziFeed, googleFeed, parameterGroups, zobrazovat, poradi';
+    private const COLUMNS = 'id, nadrazena, variantParameterGroup_id, foto, heurekaFeed, zboziFeed, googleFeed, parameterGroups, zobrazovat, poradi';
 
     /**
      * Find category by ID
@@ -98,6 +98,7 @@ class BaseCategoryRepository
         return new BaseCategory(
             id: (int) $row->id,
             parentId: $row->nadrazena > 0 ? (int) $row->nadrazena : null,
+            variantParameterGroupId: $row->variantParameterGroup_id ? (int) $row->variantParameterGroup_id : null,
             photo: $row->foto ?? '',
             heurekaFeed: $row->heurekaFeed ?? '',
             zboziFeed: $row->zboziFeed ?? '',

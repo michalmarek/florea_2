@@ -5,6 +5,7 @@ namespace UI\Base\Product;
 use Core\Container;
 use UI\Base\BasePresenter;
 use Models\Product\ProductRepository;
+use Models\Product\ProductVariantService;
 
 /**
  * ProductPresenter
@@ -14,8 +15,9 @@ use Models\Product\ProductRepository;
 class ProductPresenter extends BasePresenter
 {
     public function __construct(
-        Container $container,
-        private ProductRepository $productRepository
+        Container                              $container,
+        private readonly ProductRepository     $productRepository,
+        private readonly ProductVariantService $variantService,
     ) {
         parent::__construct($container);
     }
@@ -38,8 +40,12 @@ class ProductPresenter extends BasePresenter
             exit;
         }
 
+        // Načíst varianty
+        $variants = $this->variantService->getVariants($product);
+
         // Předání dat do template
         $this->assign('product', $product);
+        $this->assign('variants', $variants);
         $this->assign('pageTitle', $product->name);
     }
 

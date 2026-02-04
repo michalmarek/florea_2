@@ -18,7 +18,7 @@ class ProductRepository
     /**
      * Standard columns for Product entity
      */
-    private const COLUMNS = 'id, shop, seller_id, fl_kategorie, nazev, cenaFlorea, sklad, fl_zobrazovat';
+    private const COLUMNS = 'id, shop, seller_id, fl_kategorie, groupCode, nazev, cenaFlorea, sklad, fl_zobrazovat';
 
     /**
      * Find product by ID
@@ -143,13 +143,14 @@ class ProductRepository
      * @param object $row Database row from Nette Database
      * @return Product Product entity
      */
-    private function mapToEntity(object $row): Product
+    public function mapToEntity(object $row): Product
     {
         return new Product(
             id: (int) $row->id,
             shopId: (int) $row->shop,
             sellerId: (int) $row->seller_id,
             categoryId: (int) $row->fl_kategorie,
+            groupCode: $row->groupCode,
             name: $row->nazev,
             price: (float) $row->cenaFlorea,
             stock: (float) $row->sklad,
